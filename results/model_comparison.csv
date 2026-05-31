@@ -1,0 +1,4 @@
+Model,MAE,RMSE,MAPE (%)
+Naive Baseline,0.4062,0.6356,44.1541
+Moving Average (24h),0.5697,0.6986,85.797
+LSTM (Our Model),0.3707,0.5421,45.7749
