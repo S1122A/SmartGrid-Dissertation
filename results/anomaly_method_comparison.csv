@@ -1,0 +1,3 @@
+Method,Anomalies_Flagged,Percentage,Features_Used
+Isolation Forest (multivariate),346,1.00%,7
+Z-score baseline (univariate),440,1.27%,1
