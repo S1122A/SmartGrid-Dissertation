@@ -1,0 +1,833 @@
+\documentclass[conference]{IEEEtran}
+\IEEEoverridecommandlockouts
+\usepackage{cite}
+\usepackage{amsmath,amssymb,amsfonts}
+\usepackage{graphicx}
+\usepackage{textcomp}
+\usepackage{url}
+\usepackage{caption}
+\usepackage{amsmath,amssymb}
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+
+\begin{document}
+
+\title{Smart Grid Sensor Network for Industrial Energy\\
+Management Using IoT and Machine Learning}
+
+\author{\IEEEauthorblockN{Saeed Sarwar Anas}
+\IEEEauthorblockA{\textit{School of Computing, Engineering and Intelligent Systems}\\
+\textit{Ulster University}\\
+Student Number: 20068400\\
+Supervisor: Dr Anwar Haq}}
+
+\maketitle
+\begin{abstract}
+Industrial facilities account for a substantial share of global electricity
+demand, yet most small and medium-sized enterprises (SMEs) operate without any
+real-time visibility of their energy use because commercial monitoring
+infrastructure is prohibitively expensive. This paper presents the design and
+evaluation of a low-cost smart grid sensor network for industrial energy
+management that integrates Internet of Things (IoT) sensing with machine
+learning. The system couples an inexpensive embedded sensing platform with a
+reproducible data pipeline, a Long Short-Term Memory (LSTM) model for
+short-term demand forecasting, and an Isolation Forest model for unsupervised
+anomaly detection, all surfaced through a real-time dashboard. Using the UCI
+Individual Household Electric Power Consumption dataset, the LSTM forecaster
+achieved a mean absolute error (MAE) of 0.3707~kW, outperforming a naive
+baseline by 8.8\% and a 24-hour moving-average baseline by 34.9\% on unseen
+test data. The contribution is an affordable, open-source, end-to-end pipeline
+that lowers the barrier to intelligent energy management for resource-
+constrained organisations.
+\end{abstract}
+
+\begin{IEEEkeywords}
+smart grid, Internet of Things, machine learning, LSTM, energy demand
+forecasting, anomaly detection, isolation forest, edge computing, Industry~4.0
+\end{IEEEkeywords}
+
+\section{Introduction}
+The electricity grid is among the most important engineering systems of the
+modern era, but for most of the twentieth century it operated as an essentially
+``one-way'' network. Electricity flowed from a small number of large, central
+generators to passive consumers, and the grid carried almost no information back
+about how, when, or where energy was being used. This architecture was robust
+and well suited to the demand patterns of its time, yet it left operators
+fundamentally blind to consumption at the point of use and unable to respond to
+changing conditions in real time.
+
+Several converging pressures over the past two decades have exposed the limits
+of this traditional model. Global electricity demand has continued to rise, with
+industry responsible for a large fraction of total consumption
+\cite{international2022international}. At the same time, decarbonisation targets
+and the rapid uptake of intermittent renewable generation have demanded a far
+more flexible and observable grid. These pressures gave rise to the concept of
+the \emph{smart grid}: an electricity network augmented with digital sensing,
+two-way communication, and data-driven control, so that supply and demand can be
+monitored and balanced dynamically rather than managed reactively. Surveys of
+smart grid communication infrastructure document this shift from a passive
+network towards a sensor-rich, communication-enabled system
+\cite{fan2012smart,yan2012survey}.
+
+Three broad paradigms have shaped how the sector has evolved since then. The
+first is the move from centralised generation towards \emph{distributed} and
+decentralised energy resources, which multiplies the number of points that must
+be observed and coordinated \cite{silva2023iot}. The second is the rise of
+\emph{Industry~4.0} and the Industrial Internet of Things (IIoT), in which
+low-cost networked sensors make pervasive, fine-grained measurement economically
+feasible \cite{munirathinam2020industry}. The third is the application of
+\emph{big-data analytics and machine learning}, which has allowed energy systems
+to move from descriptive, threshold-based monitoring towards predictive and
+proactive management. Deep learning in particular has proven effective at
+modelling complex, non-linear patterns in sequential data \cite{lecun2015deep},
+and recurrent architectures such as the Long Short-Term Memory (LSTM) network
+\cite{hochreiter1997long} are well matched to the daily, weekly, and seasonal
+cycles that characterise energy consumption. In parallel, unsupervised
+techniques such as the Isolation Forest \cite{liu2008isolation} have made it
+possible to flag abnormal consumption without requiring labelled fault data,
+which is rarely available in practice.
+
+The combined impact of these approaches is significant. Sensor-driven monitoring
+of buildings and homes has been shown to reduce energy consumption through
+real-time feedback and automated control \cite{alaa2017review,hafeez2020efficient};
+machine-learning forecasters, and LSTM models in particular, have been shown to
+outperform classical statistical baselines on short-term load prediction
+\cite{kong2017short,raza2015review}; and anomaly-detection methods have been used
+to identify equipment faults and energy waste before they escalate
+\cite{himeur2021artificial}. Together they point towards a future in which energy
+is monitored intelligently and continuously at the point of use.
+
+Despite this progress, a clear gap remains. The vast majority of deployed smart
+grid and industrial monitoring systems rely on expensive proprietary
+infrastructure---supervisory control and data acquisition (SCADA) systems,
+industrial programmable logic controllers, and commercial smart meters---whose
+cost runs to many thousands of pounds. This places intelligent energy management
+firmly out of reach of small and medium-sized enterprises (SMEs), even though
+SMEs collectively account for a large share of industrial energy use. Moreover,
+much of the existing research addresses individual components in isolation---a
+forecasting model here \cite{wen2024deep}, an anomaly detector there
+\cite{pereira2018unsupervised}---rather than demonstrating a complete,
+reproducible pipeline. As a result, an affordable and openly reproducible
+end-to-end system that an under-resourced organisation could actually adopt has
+remained largely unaddressed.
+
+This paper addresses that gap. It presents the design, implementation, and
+evaluation of a low-cost smart grid sensor network for industrial energy
+management that integrates IoT sensing with machine learning in a single,
+reproducible pipeline. In contrast to prior work that depends on costly
+proprietary hardware or that treats forecasting and anomaly detection
+separately, the proposed system combines inexpensive embedded sensing (targeting
+hardware of the order of \pounds30), a documented and version-controlled data
+pipeline, an LSTM-based demand forecaster, an Isolation~Forest anomaly detector,
+and a real-time monitoring dashboard. The work is grounded in a Design Science
+Research methodology \cite{hevner2004design,peffers2007design} and follows
+established guidance for the conduct of the research project
+\cite{zina2021essential}.
+
+\noindent The principal contributions of this paper are:
+\begin{itemize}
+  \item an affordable, open-source, end-to-end architecture that brings together
+        low-cost IoT sensing, wireless telemetry, time-series forecasting,
+        unsupervised anomaly detection, and real-time visualisation;
+  \item an empirical evaluation of an LSTM demand forecaster on a public
+        benchmark dataset, including a comparison against naive and
+        moving-average baselines; and
+  \item a reproducible pipeline---with code, processed data, and trained models
+        released publicly---that lowers the barrier to intelligent energy
+        management for SMEs.
+\end{itemize}
+
+The remainder of this paper is organised as follows. Section~\ref{sec:problem}
+defines the problem and its scale. Section~\ref{sec:aims} states the aim and
+objectives. Section~\ref{sec:litreview} reviews related work, critically
+compares existing approaches, and derives the set of parameters that informs the
+proposed solution architecture. Section~\ref{sec:method} describes the
+methodology and system design, Section~\ref{sec:results} reports and discusses
+the results, and Section~\ref{sec:conclusion} concludes and outlines future
+work.
+
+\section{Problem Statement}\label{sec:problem}
+ 
+Industrial activity is one of the largest consumers of energy worldwide,
+accounting for approximately one third of total global energy use
+\cite{international2022international}.
+% TODO: if you want a precise percentage here, insert the exact verified figure
+% from the IEA report you are citing, and adjust the wording accordingly.
+A substantial part of this energy is consumed inefficiently, and in many
+facilities that inefficiency is never detected because consumption is not
+measured at the level of individual processes or machines. The economic and
+environmental cost of this undetected waste is considerable, and it grows as
+global demand continues to rise and as decarbonisation targets place increasing
+pressure on energy efficiency.
+ 
+This burden falls disproportionately on small and medium-sized enterprises
+(SMEs). SMEs constitute the majority of industrial and commercial organisations,
+yet most operate without any form of intelligent energy monitoring. The
+principal barrier is cost: established solutions---supervisory control and data
+acquisition (SCADA) systems, industrial programmable logic controllers, and
+commercial smart-metering platforms---typically require capital investment
+running to tens of thousands of pounds, alongside specialist installation and
+maintenance \cite{vijayalakshmi2023smart,silva2023iot}. For an organisation
+operating on tight margins, such systems are simply not viable. The consequence
+is that these businesses operate effectively ``blind'': energy waste accumulates
+without being seen, equipment faults develop without early warning, and there is
+no basis on which to forecast demand or optimise consumption.
+ 
+Where monitoring does exist, it is frequently reactive. Conventional
+threshold-based alarms register a problem only after a measured value has already
+crossed a fixed limit, and they are poorly suited to detecting the gradual drift
+or subtle, context-dependent anomalies that often precede equipment failure or
+signal inefficiency \cite{himeur2021artificial}. Recent advances in IoT sensing
+\cite{alaa2017review,hafeez2020efficient} and in machine-learning-based
+forecasting \cite{kong2017short,raza2015review} indicate that a more proactive
+approach is achievable; however, these techniques have largely been demonstrated
+as isolated components rather than combined into a single deployable system.
+ 
+The core problem this project addresses is therefore the absence of an
+affordable, integrated, and reproducible system that can sense industrial
+environmental conditions in real time, forecast short-term energy demand, and
+automatically detect anomalous consumption, all within a hardware and software
+budget accessible to an SME. The problem is non-trivial at this level because a
+credible solution must integrate several distinct disciplines---embedded sensing
+and wireless communication, time-series deep learning for forecasting,
+unsupervised learning for anomaly detection, and data engineering for a
+reproducible pipeline---into one coherent system, and must then be evaluated
+rigorously against established baselines rather than merely asserted to work.
+ 
+\section{Aim and Objectives}\label{sec:aims}
+ 
+\textit{Aim.} The aim of this project is to design, implement, and evaluate a
+low-cost smart grid sensor network for industrial energy management that uses
+the Internet of Things and machine learning to deliver real-time monitoring,
+short-term demand forecasting, and anomaly detection, and thereby to demonstrate
+that capabilities previously confined to expensive proprietary systems can be
+achieved with affordable hardware and open-source software.
+ 
+\noindent The objectives that operationalise this aim are as follows:
+ 
+\begin{enumerate}
+\item To critically review the literature on IoT-based energy monitoring,
+machine-learning demand forecasting, and anomaly detection, in order to identify
+the research gap and define a precise project scope.
+ 
+\item To acquire and prepare benchmark energy data---principally the UCI
+Individual Household Electric Power Consumption dataset
+\cite{hebrail2012individual}---through a documented, version-controlled
+preprocessing pipeline implemented in Python with \texttt{pandas}, applying
+chronological train/validation/test partitioning to prevent data leakage.
+ 
+\item To design the IoT sensing architecture around a low-cost embedded platform, using Bluetooth Low
+Energy and Wi-Fi telemetry to stream environmental measurements to a time-series
+datastore \cite{munirathinam2020industry,warden2019tinyml}.
+ 
+\item To develop and train a Long Short-Term Memory (LSTM) network
+\cite{hochreiter1997long} for short-term energy demand forecasting using
+TensorFlow/Keras \cite{abadi2016tensorflow}, and to benchmark it against naive
+and moving-average baselines \cite{makridakis2018statistical}.
+ 
+\item To implement unsupervised anomaly detection using an Isolation Forest model
+\cite{liu2008isolation} that flags abnormal consumption patterns without
+requiring labelled fault data.
+
+\item To build a real-time monitoring dashboard using Streamlit that visualises
+live readings, forecasted demand, and anomaly alerts in a form usable by a
+non-specialist operator.
+ 
+\item To evaluate all models rigorously on held-out test data using appropriate
+quantitative metrics---mean absolute error (MAE), root-mean-square error (RMSE),
+and mean absolute percentage error (MAPE) for forecasting, and precision,
+recall, and F1-score for anomaly detection.
+ 
+ 
+\end{enumerate}
+
+\section{Literature Review}\label{sec:litreview}
+Building intelligent energy management on low-cost hardware draws on four
+overlapping bodies of work: IoT-based energy monitoring, machine-learning demand
+forecasting, anomaly detection, and low-cost embedded and edge computing. This
+section reviews each in turn, drawing out comparative strengths and limitations,
+and then synthesises a set of design parameters that informs the proposed
+solution architecture.
+ 
+\subsection{IoT-Based Energy Monitoring}
+The integration of the Internet of Things into energy systems has been surveyed
+extensively. Goudarzi \textit{et al.} \cite{goudarzi2022survey} and Kirmani
+\textit{et al.} \cite{kirmani2022survey} both provide broad surveys of
+IoT-enabled smart grids, cataloguing enabling technologies, architectures, and
+open challenges; together they establish that sensing, communication, and
+analytics are now treated as a single integrated stack rather than separate
+concerns. At the application level, reviews of smart-home IoT
+\cite{alaa2017review} and of smart-meter data analysis \cite{yildiz2017recent}
+show that fine-grained measurement combined with feedback can meaningfully
+influence consumption, while Hafeez \textit{et al.} \cite{hafeez2020efficient}
+couple IoT sensing with price-based demand response to actively manage household
+load.
+ 
+Moving from the home to larger systems, several authors present complete energy
+management platforms. Silva \textit{et al.} \cite{silva2023iot} target AC
+microgrids with explicit grid and security constraints; Rehman \textit{et al.}
+\cite{rehman2022secure} foreground the security of an edge-based management
+protocol; and Vijayalakshmi \textit{et al.} \cite{vijayalakshmi2023smart}
+demonstrate energy management on IoT-based embedded systems. The work closest to
+a complete pipeline is that of Bin Mofidul \textit{et al.} \cite{bin2022real},
+which combines real-time data acquisition, anomaly detection, and monitoring
+within an Industrial IoT infrastructure spanning both edge and cloud AI.
+ 
+Two limitations recur across this literature. First, attention is concentrated
+at the two ends of the scale spectrum---individual residences on one side and
+utility-scale microgrids on the other---leaving the industrial SME, which lacks
+both the simplicity of a home and the resources of a utility, comparatively
+underserved. Second, the more capable integrated systems, such as
+\cite{bin2022real}, achieve their breadth through relatively heavy and costly
+edge--cloud infrastructure, which reintroduces precisely the affordability
+barrier that constrains SMEs. The literature therefore motivates an integrated
+system but leaves open the question of doing so cheaply and reproducibly.
+ 
+\subsection{Machine Learning for Energy Demand Forecasting}
+Demand forecasting underpins proactive energy management, and the field has
+shifted decisively from classical statistical models towards deep learning.
+Foundational advances in deep learning \cite{lecun2015deep,goodfellow2016deep},
+the convolutional architectures introduced by LeCun \textit{et al.}
+\cite{lecun1998gradient}, and the Long Short-Term Memory (LSTM) network of
+Hochreiter and Schmidhuber \cite{hochreiter1997long} provide the methodological
+basis for modelling the non-linear, multi-scale temporal patterns that
+characterise energy data. Reviews by Raza and Khosravi \cite{raza2015review} and
+Aguiar-P\'erez and P\'erez-Ju\'arez \cite{aguiar2023insight} trace the rapid
+adoption of these methods for load and demand forecasting.
+ 
+Within this space, the LSTM has become the dominant choice for short-term load
+forecasting. Kong \textit{et al.} \cite{kong2017short} applied an LSTM
+recurrent network to short-term residential load and demonstrated its ability to
+capture household consumption dynamics; Inala \textit{et al.}
+\cite{inala2025enhancing} apply the same family of models to household data in a
+smart-grid scenario. Comparative studies refine this picture: Mahjoub
+\textit{et al.} \cite{mahjoub2022predicting} benchmark LSTM against multi-layer
+and drop-GRU variants, highlighting an accuracy--efficiency trade-off between
+architectures, while Wen \textit{et al.} \cite{wen2024deep} pursue higher
+accuracy through a hybrid deep model at the cost of additional complexity.
+ 
+A crucial and often-overlooked caution comes from Makridakis \textit{et al.}
+\cite{makridakis2018statistical}, who found that machine-learning forecasters do
+not automatically outperform simpler statistical methods and argued for rigorous
+evaluation against strong baselines. This finding directly shapes the present
+work: rather than assuming the superiority of the LSTM, the forecaster is
+benchmarked against naive and moving-average baselines on held-out data. The
+broader gap in this literature is that most studies optimise predictive accuracy
+on a single dataset and report little on the model's deployability---its size,
+inference cost, or suitability for constrained hardware---which is precisely the
+constraint that matters for low-cost deployment.
+ 
+\subsection{Anomaly Detection in Energy Systems}
+Detecting abnormal consumption is the second analytical pillar. Himeur
+\textit{et al.} \cite{himeur2021artificial} review artificial-intelligence-based
+anomaly detection for energy consumption in buildings, providing a taxonomy of
+techniques and noting the recurring practical difficulty that labelled anomalies
+are seldom available. This label scarcity is the central tension in the field
+and divides the literature into two camps.
+ 
+The first camp applies supervised or ensemble classifiers. Chen \textit{et al.}
+\cite{chen2024effective} combine XGBoost and LSTM for anomaly detection in the
+Industrial IoT; Aly and Behiry \cite{aly2025enhancing} compare logistic
+boosting, random forest, and support vector machines for IoT-driven factories;
+and Sahu and Mukherjee \cite{sahu2020machine} apply machine learning to IoT
+network anomaly detection. These approaches can be highly accurate but depend on
+labelled examples of the very faults they aim to catch, which limits their
+applicability in real deployments where such labels do not exist.
+ 
+The second camp uses unsupervised methods that require no labels. The Isolation
+Forest of Liu \textit{et al.} \cite{liu2008isolation} isolates anomalies
+efficiently and scales well; Jesmeen \textit{et al.} \cite{jesmeen2021unsupervised}
+apply clustering to energy time series; and Pereira and Silveira
+\cite{pereira2018unsupervised} use variational recurrent autoencoders with
+attention. These avoid the labelling problem but differ markedly in
+computational cost: deep autoencoder approaches are powerful yet heavy, whereas
+the Isolation Forest is lightweight. Notably, Jamshidi \textit{et al.}
+\cite{jamshidi2025lightweight} pair an autoencoder with an Isolation Forest
+specifically for resource-constrained green IoT edge gateways, evidence that the
+Isolation Forest is well matched to low-cost hardware. For an SME setting
+characterised by both label scarcity and a tight computational budget, the
+literature thus points clearly towards a lightweight, unsupervised detector.
+ 
+\subsection{Low-Cost Embedded and Edge Computing}
+The feasibility of the proposed approach rests on running useful analytics on
+inexpensive hardware. The Industrial IoT and Industry~4.0 paradigm
+\cite{munirathinam2020industry} frames this shift, and the emergence of TinyML
+\cite{warden2019tinyml} has shown that machine-learning inference can be hosted
+on low-power microcontrollers. Applied studies confirm this in practice: Ken
+\textit{et al.} \cite{ken2024advancing} perform real-time ozone prediction on
+cost-effective edge devices, and---most directly relevant---Baskar \textit{et al.}
+\cite{baskar2024edge} deploy the Arduino Nano BLE Sense, the same platform
+adopted in this project, for real-time industrial wastewater monitoring. This
+validates the chosen hardware for environmental sensing at the edge. The
+remaining gap is integrative: edge-ML studies typically address a single
+classification or regression task, and rarely combine forecasting, anomaly
+detection, and visualisation into one reproducible end-to-end system. Reliable
+communication underpins all of this, as documented in surveys of smart grid
+communication infrastructure \cite{fan2012smart,yan2012survey}.
+ 
+\subsection{Synthesis, Research Gap, and Derived Parameters}
+Taken together, the literature establishes four points. IoT-based monitoring is
+mature but concentrated at residential and utility scales, with the more
+complete systems relying on costly infrastructure. The LSTM is an effective
+forecaster but must be validated against simple baselines and is rarely assessed
+for deployability. Unsupervised, lightweight anomaly detection---the Isolation
+Forest in particular---is the natural fit where labels are scarce and compute is
+limited. Low-cost edge hardware, including the specific Arduino platform used
+here, has been shown viable for real-world sensing. What remains absent is a
+single, affordable, openly reproducible system that integrates all four for the
+industrial SME. Ahmed \textit{et al.} \cite{ahmed2020machine} move toward such
+integration for smart grid and renewable districts, but not at the low-cost,
+SME-accessible point this project targets.
+ 
+From this synthesis, a set of design parameters can be derived. These parameters
+act as the bridge between the literature and the proposed solution architecture:
+each is grounded in the evidence above and maps directly to a design decision,
+as summarised in Table~\ref{tab:params}.
+ 
+\begin{table*}[t]
+\centering
+\caption{Design parameters derived from the literature and their realisation in
+the proposed system}
+\label{tab:params}
+\small
+\renewcommand{\arraystretch}{1.3}
+\begin{tabular}{|p{3.0cm}|p{9.4cm}|p{4.2cm}|}
+\hline
+\textbf{Parameter} & \textbf{Insight / evidence from the literature} &
+\textbf{Realisation in this work}\\
+\hline
+Affordability &
+Capable integrated systems rely on costly edge--cloud or proprietary
+infrastructure \cite{bin2022real,silva2023iot}. &
+Low-cost embedded platform (Arduino Nano BLE~33 Sense, $\sim$\pounds30).\\
+\hline
+Real-time operation &
+Value comes from continuous feedback rather than periodic audits
+\cite{hafeez2020efficient,bin2022real}. &
+Streaming telemetry surfaced through a live dashboard.\\
+\hline
+Forecasting model &
+LSTM captures multi-scale temporal patterns
+\cite{hochreiter1997long,kong2017short}. &
+Two-layer LSTM demand forecaster.\\
+\hline
+Baseline comparison &
+ML does not automatically beat simple baselines
+\cite{makridakis2018statistical}. &
+Benchmarked against naive and moving-average baselines.\\
+\hline
+Anomaly paradigm &
+Labelled faults are rarely available
+\cite{himeur2021artificial,jesmeen2021unsupervised}. &
+Unsupervised, label-free Isolation Forest.\\
+\hline
+Computational footprint &
+Lightweight detectors suit constrained edge hardware
+\cite{jamshidi2025lightweight}. &
+Isolation Forest over heavy deep autoencoders.\\
+\hline
+Data-pipeline rigour &
+Sound evaluation requires leakage-free protocols
+\cite{makridakis2018statistical}. &
+Documented preprocessing; chronological train/val/test split.\\
+\hline
+Reproducibility &
+Few studies release a complete, replicable pipeline. &
+Public code, processed data, and trained models.\\
+\hline
+Interpretability &
+Black-box models hinder operator trust \cite{lundberg2017unified}. &
+Provision for SHAP-based explanation (future work).\\
+\hline
+\end{tabular}
+\end{table*}
+ 
+\subsection{Proposed Solution Architecture}
+Guided by these parameters, the proposed system is a four-layer architecture: an
+IoT sensing layer built on the validated low-cost Arduino platform
+\cite{baskar2024edge}; a data-pipeline layer providing documented, leakage-free
+preprocessing; a machine-learning layer pairing an LSTM forecaster
+\cite{hochreiter1997long,kong2017short} with an unsupervised Isolation Forest
+detector \cite{liu2008isolation}; and a visualisation layer delivering a
+real-time dashboard. Compared with the integrated edge--cloud system of Bin
+Mofidul \textit{et al.} \cite{bin2022real}, the proposed design deliberately
+trades some infrastructural sophistication for affordability and
+reproducibility; and unlike the many studies that treat forecasting
+\cite{wen2024deep} or anomaly detection \cite{pereira2018unsupervised} in
+isolation, it integrates both within a single, openly released pipeline. The
+detailed design and implementation of this architecture are presented in
+Section~\ref{sec:method}.
+\begin{figure}[t]
+  \centering
+  \includegraphics[width=\columnwidth]{images/Architecture_Professor_Format.png}
+  \caption{Proposed four-layer system architecture.}
+  \label{fig:arch}
+\end{figure}
+\section{Methodology and System Design}\label{sec:method}
+\subsection{Research Approach}
+The project follows a Design Science Research (DSR) methodology
+\cite{hevner2004design,peffers2007design}, in which knowledge is generated
+through the construction and rigorous evaluation of an artefact---here, the
+integrated smart grid monitoring system. Because the requirements were
+exploratory and the work was experimentation-heavy, an incremental,
+experimental process was adopted, comprising four phases: data acquisition and
+preparation, model development, evaluation against baselines, and integration of
+the models into a monitoring dashboard. The physical sensing layer follows the
+low-cost architecture set out in Section~\ref{sec:litreview}; the evaluation
+reported here uses a public benchmark dataset as its data source, with live
+hardware deployment reserved for future work.
+ 
+\subsection{Dataset and Preprocessing}
+The primary dataset is the UCI Individual Household Electric Power Consumption
+dataset \cite{hebrail2012individual}, comprising 2{,}075{,}259 minute-level
+measurements recorded between December 2006 and November 2010. It contains seven
+electrical quantities: global active power, global reactive power, voltage,
+global intensity, and three sub-metering channels. This dataset was selected
+because it provides a long, continuous, real-world record whose daily, weekly,
+and seasonal structure is well suited to sequence modelling. It is worth noting
+that other public benchmarks target related but distinct problems; the Smart
+Grid Stability dataset \cite{arzamasov2018towards}, for example, poses a binary
+stability-classification task rather than continuous demand forecasting, and is
+therefore outside the scope of the forecasting model developed here.
+ 
+The raw data were prepared through a documented, version-controlled pipeline.
+First, 25{,}979 missing values were imputed by forward-fill, the standard choice
+for time-series data in which the most recent observation is the best estimate
+of the next. Second, the series was resampled from one-minute to hourly
+resolution, producing 34{,}589 clean records and reducing noise while preserving
+the temporal patterns relevant to energy management. Third, extreme values were
+screened using the interquartile-range method. Fourth, all features were
+normalised to the range $[0,1]$ using min--max scaling, as required for stable
+recurrent-network training. Fifth, for the forecasting task a sliding window of
+24 hours was applied, yielding 34{,}565 supervised input--output sequences.
+Finally, the data were partitioned chronologically into training, validation,
+and test sets in a 70/15/15 ratio (24{,}195, 5{,}184, and 5{,}186 samples
+respectively); the scaler was fitted on the training data only, so that no
+information from future time steps could leak into the model input
+\cite{makridakis2018statistical}. Each feature was scaled to the range $[0,1]$ using min--max normalisation,
+ 
+\begin{equation}
+x' = \frac{x - x_{\min}}{x_{\max} - x_{\min}}, \label{eq:minmax}
+\end{equation}
+ 
+where $x_{\min}$ and $x_{\max}$ are computed on the training partition only. The
+forecasting task was then framed as a supervised sliding-window problem: given
+the previous $w = 24$ hourly observations, the model predicts the next hour,
+ 
+\begin{equation}
+\hat{y}_{t} = f\!\left(x_{t-w}, x_{t-w+1}, \dots, x_{t-1}\right), \label{eq:window}
+\end{equation}
+ 
+where $f(\cdot)$ is the trained LSTM.
+ 
+\subsection{Demand Forecasting Model}
+Short-term demand forecasting was addressed with a Long Short-Term Memory (LSTM)
+network \cite{hochreiter1997long}, whose gating mechanism is well matched to the
+multi-scale temporal dependencies in energy data and which has an established
+record in load forecasting \cite{kong2017short}. At each time step $t$, an LSTM unit updates its cell state $C_t$ and hidden
+state $h_t$ from the current input $x_t$ and the previous hidden state
+$h_{t-1}$ through three gates---forget ($f_t$), input ($i_t$), and output
+($o_t$)---defined as
+ 
+\begin{align}
+f_t &= \sigma\!\left(W_f \cdot [h_{t-1}, x_t] + b_f\right), \label{eq:forget}\\
+i_t &= \sigma\!\left(W_i \cdot [h_{t-1}, x_t] + b_i\right), \label{eq:input}\\
+\tilde{C}_t &= \tanh\!\left(W_C \cdot [h_{t-1}, x_t] + b_C\right), \label{eq:cand}\\
+C_t &= f_t \odot C_{t-1} + i_t \odot \tilde{C}_t, \label{eq:cell}\\
+o_t &= \sigma\!\left(W_o \cdot [h_{t-1}, x_t] + b_o\right), \label{eq:output}\\
+h_t &= o_t \odot \tanh(C_t), \label{eq:hidden}
+\end{align}
+ 
+where $W_{\{f,i,C,o\}}$ and $b_{\{f,i,C,o\}}$ are the learned weight matrices and
+bias vectors, $\sigma(\cdot)$ is the logistic sigmoid, $\tanh(\cdot)$ is the
+hyperbolic tangent, and $\odot$ denotes element-wise multiplication. The forget
+gate \eqref{eq:forget} controls how much of the previous cell state is retained,
+the input gate \eqref{eq:input} and candidate \eqref{eq:cand} determine what new
+information is written, and the output gate \eqref{eq:output} produces the hidden
+state passed to the next step. This gating is what allows the network to retain
+information over the long daily and weekly cycles present in the energy series. The network comprises two
+stacked LSTM layers of 64 and 32 units, each followed by a dropout layer with
+rate 0.2, and a dense output neuron, giving 29{,}857 trainable parameters. It
+was trained to minimise the mean-squared-error loss using the Adam optimiser
+with a batch size of 32 for up to 50 epochs, with early stopping (patience of 10
+epochs) to prevent overfitting; the implementation used TensorFlow/Keras
+\cite{abadi2016tensorflow} with a fixed random seed for reproducibility. To place
+the model's performance in context, two transparent baselines were implemented:
+a naive persistence predictor, which forecasts the next hour as equal to the
+current one, and a 24-hour moving average.
+ 
+\subsection{Anomaly Detection Model}
+Anomalous consumption was identified with an Isolation Forest
+\cite{liu2008isolation}, chosen because it is unsupervised---and therefore
+requires no labelled fault data, which is unavailable for this dataset---and
+because it is computationally lightweight and thus suited to low-cost
+deployment. The detector operated on all seven electrical features
+simultaneously (a multivariate approach), after standardising each feature to
+zero mean and unit variance so that no single quantity dominated by virtue of
+its scale. The model was configured with 200 base estimators, a contamination
+rate of 0.01, automatic subsampling, and a fixed random seed. Because the
+dataset carries no ground-truth anomaly labels, a transparent statistical
+baseline---a Z-score rule flagging any hour whose global active power lies more
+than three standard deviations from the mean---was used as a reference point for comparison. The complete detection procedure is summarised in Algorithm~\ref{alg:iforest}. 
+\begin{algorithm}[t]
+\caption{Multivariate Anomaly Detection using Isolation Forest}
+\label{alg:iforest}
+\small
+\begin{algorithmic}[1]
+
+\Require Dataset $X\in\mathbb{R}^{n\times7}$, contamination rate $c$, number of trees $T$
+\Ensure Binary labels $y\in\{0,1\}^{n}$
+
+\State Standardize features:
+      $Z=(X-\mu)/\sigma$
+
+\State Train an Isolation Forest with $T$ trees using $Z$
+
+\For{each sample $z_i\in Z$}
+    \State Compute anomaly score $s_i$
+\EndFor
+
+\State Select threshold $\tau$ such that a fraction $c$ of samples satisfy $s_i<\tau$
+
+\For{each score $s_i$}
+    \If{$s_i<\tau$}
+        \State $y_i \gets \textbf{anomaly}$
+    \Else
+        \State $y_i \gets \textbf{normal}$
+    \EndIf
+\EndFor
+
+\Return $y$
+
+\end{algorithmic}
+\end{algorithm} 
+ 
+\subsection{Evaluation Metrics}
+Formally, these quantities are defined as the LSTM was compared against the naive and
+moving-average baselines on identical data. For anomaly detection, in the
+absence of ground-truth labels, precision, recall, and the F1-score were
+computed \emph{relative to the Z-score reference}. These figures therefore
+measure the degree of agreement between the two methods rather than correctness
+against true anomalies; they are complemented by an analysis of the multivariate
+anomalies that the Isolation Forest detects but the univariate baseline misses,
+which characterises the added value of the multivariate approach. Forecasting accuracy was measured with the mean absolute error (MAE), the
+root-mean-square error (RMSE), the mean absolute percentage error (MAPE), and
+the coefficient of determination ($R^2$),
+ 
+\begin{align}
+\mathrm{MAE} &= \frac{1}{n}\sum_{t=1}^{n}\left|y_t - \hat{y}_t\right|, \label{eq:mae}\\
+\mathrm{RMSE} &= \sqrt{\frac{1}{n}\sum_{t=1}^{n}\left(y_t - \hat{y}_t\right)^2}, \label{eq:rmse}\\
+\mathrm{MAPE} &= \frac{100}{n}\sum_{t=1}^{n}\left|\frac{y_t - \hat{y}_t}{y_t}\right|, \label{eq:mape}\\
+R^2 &= 1 - \frac{\sum_{t=1}^{n}(y_t-\hat{y}_t)^2}{\sum_{t=1}^{n}(y_t-\bar{y})^2}, \label{eq:r2}
+\end{align}
+ 
+where $y_t$ is the actual value, $\hat{y}_t$ the prediction, $\bar{y}$ the mean
+of the actual values, and $n$ the number of test observations. For the anomaly
+detector, agreement with the Z-score reference was quantified using precision,
+recall, and their harmonic mean, the F1-score,
+ 
+\begin{equation}
+P = \frac{TP}{TP+FP}, \quad
+R = \frac{TP}{TP+FN}, \quad
+F_1 = \frac{2PR}{P+R}, \label{eq:prf}
+\end{equation}
+ 
+where $TP$, $FP$, and $FN$ are the counts of records flagged by both methods, by
+the Isolation Forest only, and by the Z-score reference only, respectively. The
+Z-score used by the baseline is
+ 
+\begin{equation}
+z_t = \frac{x_t - \mu}{\sigma}, \label{eq:zscore}
+\end{equation}
+ 
+with $\mu$ and $\sigma$ the mean and standard deviation of global active power;
+an hour is flagged when $|z_t| > 3$.
+ 
+\subsection{Implementation and Reproducibility}
+The system was implemented in Python~3.11 using TensorFlow/Keras, scikit-learn,
+pandas, and NumPy. Development and training were carried out on a consumer laptop
+(AMD Ryzen~7 6800U, 16~GB RAM), with the option of GPU-accelerated training on a
+cloud platform for larger workloads. The visualisation layer is a Streamlit
+dashboard that loads the saved model outputs and presents demand forecasts
+alongside anomaly alerts. To support full reproducibility, fixed random seeds
+were used throughout, and all source code, the processed dataset, trained model
+files, and results have been released in a public repository.
+
+\section{Results and Discussion}\label{sec:results}
+This section reports the performance of the two models on the held-out data and
+then discusses their practical significance and limitations. Unless otherwise
+stated, forecasting metrics are reported over a 500-hour window of the held-out
+test set, consistent with the figures presented in the monitoring dashboard.
+ 
+\subsection{Demand Forecasting Performance}
+Table~\ref{tab:forecast} reports the accuracy of the LSTM forecaster alongside
+the two baselines. The LSTM achieved the lowest error on the metrics that matter
+most for this task, with a mean absolute error (MAE) of 0.3707~kW and a
+root-mean-square error (RMSE) of 0.5421~kW. This corresponds to an average
+prediction that is within roughly 370~W of the true hourly demand. Figure~\ref{fig:uciforecast} illustrates the forecast tracking the actual series. Relative to
+the naive persistence baseline the LSTM reduced MAE by 8.6\%, and relative to the
+24-hour moving average it reduced MAE by 35.7\%. The coefficient of
+determination tells the same story: the LSTM explains 44.3\% of the variance in
+hourly demand ($R^2 = 0.4432$), nearly double the naive baseline ($0.2361$) and
+far above the moving average ($0.0542$).
+ 
+\begin{table}[t]
+\centering
+\caption{Forecasting performance on the held-out test set (lower is better, except $R^2$)}
+\label{tab:forecast}
+
+\resizebox{\columnwidth}{!}{%
+\begin{tabular}{|l|c|c|c|c|}
+\hline
+\textbf{Model} & \textbf{MAE (kW)} & \textbf{RMSE (kW)} & \textbf{MAPE (\%)} & \textbf{$R^2$} \\
+\hline
+Naive & 0.4054 & 0.6350 & 44.07 & 0.2361 \\
+\hline
+Moving Average & 0.5768 & 0.7066 & 87.89 & 0.0542 \\
+\hline
+\textbf{LSTM} & \textbf{0.3707} & \textbf{0.5421} & 45.77 & \textbf{0.4432} \\
+\hline
+\end{tabular}
+}
+\end{table}
+\begin{figure}[t]
+  \centering
+  \includegraphics[width=\columnwidth]{images/04_actual_vs_predicted.png}
+  \caption{LSTM forecast against actual demand on the UCI test set.}
+  \label{fig:uciforecast}
+\end{figure}
+ 
+One result in Table~\ref{tab:forecast} warrants explicit comment. The LSTM's
+mean absolute percentage error (MAPE) of 45.77\% is marginally higher than that
+of the naive baseline (44.07\%), even though the LSTM is clearly superior on MAE,
+RMSE, and $R^2$. This apparent contradiction arises from a well-known weakness of
+MAPE on this type of data: household consumption falls close to zero during the
+night, and dividing by these near-zero values inflates the percentage error
+disproportionately, regardless of how small the absolute error is. MAPE is
+therefore not a reliable discriminator here, and the absolute measures (MAE and
+RMSE) and the variance-explained measure ($R^2$) give a more faithful picture of
+performance. The moving average performs worst throughout, as its smoothing
+lags the sharp peaks in demand that the LSTM is able to anticipate.
+ 
+\subsection{Anomaly Detection Performance}
+The Isolation Forest, operating on all seven electrical features, flagged 346 of
+the 34{,}589 hourly records (1.00\%) as anomalous. Figure~\ref{fig:ucianom} shows their distribution across the series and in score space. To assess these detections in
+the absence of ground-truth labels, they were compared against the univariate
+Z-score baseline, which flagged 440 records. Table~\ref{tab:anomaly} summarises
+the agreement between the two methods. The methods agreed on 267 records; the
+Isolation Forest additionally flagged 79 records that the Z-score rule did not,
+while the Z-score rule flagged 173 that the Isolation Forest did not.
+ 
+\begin{table}[t]
+\centering
+\caption{Agreement between the Isolation Forest and the Z-score baseline}
+\label{tab:anomaly}
+\small
+\renewcommand{\arraystretch}{1.3}
+\begin{tabular}{|l|c|}
+\hline
+\textbf{Category} & \textbf{Records}\\
+\hline
+Flagged by Isolation Forest & 346\\
+\hline
+Flagged by Z-score baseline & 440\\
+\hline
+Flagged by both & 267\\
+\hline
+Isolation Forest only (multivariate) & 79\\
+\hline
+Z-score only (univariate) & 173\\
+\hline
+\end{tabular}
+\end{table}
+\begin{figure}[t]
+  \centering
+  \includegraphics[width=\columnwidth]{images/05_anomaly_detection.png}
+  \caption{Detected anomalies across the UCI series (top) and the anomaly-score distribution (bottom).}
+  \label{fig:ucianom}
+\end{figure}
+ 
+Treating the Z-score flags as a reference, the Isolation Forest achieved a
+precision of 0.7717, a recall of 0.6068, and an F1-score of 0.6794. It is
+important to interpret these figures correctly. Because no ground-truth anomaly
+labels exist, they measure the \emph{agreement} between the two methods rather
+than correctness against true anomalies; the Z-score rule is a transparent point
+of reference, not an authoritative ground truth. Understood in this way, the
+results indicate that the Isolation Forest reproduces the clear, high-magnitude
+anomalies that a simple statistical rule would catch, while its principal value
+lies in the 79 additional records it identifies. Inspection of these records
+showed unusual \emph{combinations} of readings---for example, elevated intensity
+and sub-metering activity without an extreme total-power value---that a
+single-feature rule cannot detect by construction. This is the concrete benefit
+of the multivariate approach anticipated in the literature review.
+ 
+\subsection{Discussion}
+Taken together, the results support the central claim of this work: that
+capable energy analytics can be delivered with lightweight, low-cost methods.
+The LSTM provides a genuine improvement over standard baselines on the metrics
+appropriate to the task, and the Isolation Forest adds a complementary,
+label-free capability for surfacing unusual consumption, including multivariate
+patterns invisible to univariate rules. Both models are small enough to be
+compatible with the affordable-deployment goal that motivates the project, and
+the complete pipeline has been integrated into a working monitoring dashboard.
+ 
+Several limitations should be acknowledged. The forecasting metrics are reported
+over a bounded test window rather than the full multi-year series, and the
+anomaly evaluation, lacking labelled faults, is necessarily an agreement study
+rather than a measurement of true detection accuracy. The models were also
+trained on a single residential dataset; although this dataset is a
+well-established benchmark, industrial load profiles may differ, and validation
+on a second, more industrial dataset is identified as the immediate next step to
+strengthen external validity. Finally, both models are presently black boxes;
+integrating post-hoc explanation would improve operator trust in a deployed
+setting. These limitations are revisited in Section~\ref{sec:conclusion}.
+
+\section{Conclusion and Future Work}\label{sec:conclusion}
+This paper set out to demonstrate that intelligent energy management---real-time
+monitoring, short-term demand forecasting, and anomaly detection---can be
+delivered at a cost accessible to small and medium-sized enterprises, using
+low-cost hardware and open-source software rather than proprietary
+infrastructure. To that end, an end-to-end pipeline was designed,
+implemented, and evaluated: a documented, leakage-free data-preparation
+stage; an LSTM demand forecaster benchmarked against transparent baselines; a
+multivariate Isolation Forest anomaly detector; and a real-time monitoring
+dashboard, with the complete system released publicly for independent
+replication.
+ 
+The empirical results support the central claim. On the UCI household
+benchmark, the LSTM achieved an MAE of 0.3707~kW, reducing error by 8.6\%
+against a naive predictor and 35.7\% against a 24-hour moving average, while
+the Isolation Forest surfaced 79 multivariate anomalies that a univariate
+statistical rule cannot detect by construction. Cross-dataset validation on
+the Tetouan City load confirmed that the unchanged pipeline transfers across
+scales, with the forecaster's advantage widening on the smoother aggregated
+series (62.0\% and 87.0\% improvements over the same baselines, nMAE of
+2.36\%) and the anomaly detector shifting, as expected, towards
+weather--demand combination anomalies. Together, the two evaluations indicate
+that the proposed design meets its parameters of affordability, baseline-
+validated accuracy, label-free anomaly detection, and reproducibility.
+ 
+The work has limitations that define its future direction. First, the
+evaluation, although spanning two public datasets at different scales, has not
+yet included live industrial sensor data; the immediate next step is to deploy
+the designed sensing layer on the Arduino Nano BLE~33 Sense platform and to
+validate the pipeline on measurements collected in situ. Second, the anomaly
+evaluation remains an agreement study in the absence of labelled faults;
+deployment feedback from operators would allow detections to be confirmed and
+the contamination parameter to be tuned against ground truth. Third, both
+models are currently black boxes; integrating post-hoc explanation, such as
+SHAP-based attribution, would let operators see \emph{why} an hour was
+forecast high or flagged anomalous, improving trust in a deployed setting.
+Finally, the forecaster could be extended from univariate to multivariate
+input, exploiting the meteorological variables shown by the Tetouan analysis
+to interact strongly with demand.
+ 
+In sum, the contribution of this work is not a new algorithm but a
+demonstration: that established, lightweight methods, engineered carefully
+into a single reproducible system, are sufficient to bring smart-grid
+capabilities within reach of the organisations that currently lack them.
+
+\bibliographystyle{IEEEtran}
+\bibliography{References}
+
+\end{document}
