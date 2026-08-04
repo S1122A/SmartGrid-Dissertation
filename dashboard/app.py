@@ -1,55 +1,71 @@
 """
-Smart Grid Sensor Network - Real-Time Energy Monitoring Dashboard
-COM748 MSc Research Project | Saeed Sarwar Anas (20068400) | Ulster University
+Smart Grid Energy Monitoring Dashboard
+--------------------------------------
+Saeed Sarwar Anas | 20068400 | COM748 | Ulster University
 
-Loads the pre-computed results from the LSTM forecasting model (notebook 02)
-and the Isolation Forest anomaly detector (notebook 03) and presents them in
-one interface.
+v2 adds a DATASET SELECTOR so the same dashboard can display either the
+UCI household benchmark or the Tetouan City cross-validation results.
+It reads only pre-computed model outputs, so nothing trains at run time.
 
-Run from the PROJECT ROOT (not from inside the dashboard folder):
-    streamlit run dashboard/app.py
+Run:  python -m streamlit run dashboard/app.py
 """
 
-import streamlit as st
-import pandas as pd
-import numpy as np
-import plotly.graph_objects as go
 from pathlib import Path
+import numpy as np
+import pandas as pd
+import plotly.graph_objects as go
+import streamlit as st
 
-# ----------------------------------------------------------------------------
-# Page configuration  (must be the first Streamlit call)
-# ----------------------------------------------------------------------------
 st.set_page_config(
-    page_title="Smart Grid Energy Dashboard",
-    page_icon="\u26a1",
+    page_title="Smart Grid Energy Monitoring",
+    page_icon="⚡",
     layout="wide",
-    initial_sidebar_state="expanded",
 )
 
-# ----------------------------------------------------------------------------
-# Paths - resolved relative to the project root so it works from anywhere
-# ----------------------------------------------------------------------------
 ROOT = Path(__file__).resolve().parent.parent
-DATA_FILE = ROOT / "data" / "clean_hourly_power.csv"
-PRED_FILE = ROOT / "results" / "predictions.csv"
-ANOM_FILE = ROOT / "results" / "detected_anomalies.csv"
 
-# ----------------------------------------------------------------------------
-# Cached data loaders
-# ----------------------------------------------------------------------------
-@st.cache_data
-def load_power():
-    return pd.read_csv(DATA_FILE, parse_dates=["datetime"], index_col="datetime")
+# ---------------------------------------------------------------------------
+# Dataset registry - each entry points at the pre-computed outputs for one run
+# ---------------------------------------------------------------------------
+DATASETS = {
+    "UCI Household (primary benchmark)": {
+        "key": "uci",
+        "unit": "kW",
+        "power_file": ROOT / "data" / "clean_hourly_power.csv",
+        "power_col": "Global_active_power",
+        "time_col": "datetime",
+        "pred_file": ROOT / "results" / "predictions.csv",
+        "anom_file": ROOT / "results" / "detected_anomalies.csv",
+        "blurb": "2,075,259 minute-level records (Dec 2006 - Nov 2010) from a single "
+                 "French household, resampled to 34,589 hourly records.",
+    },
+    "Tetouan City (cross-dataset validation)": {
+        "key": "tetouan",
+        "unit": "kW",
+        "power_file": None,                     # full hourly series not published
+        "power_col": "Total_Consumption",
+        "time_col": "DateTime",
+        "pred_file": ROOT / "results" / "tetouan_predictions.csv",
+        "anom_file": ROOT / "results" / "tetouan_detected_anomalies.csv",
+        "blurb": "52,416 ten-minute records (2017) across three distribution zones of "
+                 "Tetouan, Morocco, plus weather, resampled to 8,736 hourly records.",
+    },
+}
 
+# ---------------------------------------------------------------------------
+# Loaders (cached per file path)
+# ---------------------------------------------------------------------------
 @st.cache_data
-def load_predictions():
-    df = pd.read_csv(PRED_FILE)
-    # drop an unnamed index column if pandas wrote one
+def load_csv(path, time_col=None):
+    if path is None or not Path(path).exists():
+        return None
+    if time_col:
+        df = pd.read_csv(path, parse_dates=[time_col], index_col=time_col)
+        # results files are written in detection order, not date order;
+        # sorting is required before any date-range slicing
+        return df.sort_index()
+    df = pd.read_csv(path)
     return df.loc[:, ~df.columns.str.contains("^Unnamed")]
-
-@st.cache_data
-def load_anomalies():
-    return pd.read_csv(ANOM_FILE, parse_dates=["datetime"], index_col="datetime")
 
 def mae(a, p):
     return float(np.mean(np.abs(a - p)))
@@ -57,29 +73,23 @@ def mae(a, p):
 def rmse(a, p):
     return float(np.sqrt(np.mean((a - p) ** 2)))
 
-# ----------------------------------------------------------------------------
-# Load everything, with friendly errors if a file is missing
-# ----------------------------------------------------------------------------
-missing = [str(f) for f in (DATA_FILE, PRED_FILE, ANOM_FILE) if not f.exists()]
-if missing:
-    st.error("Could not find these result files:\n\n" + "\n".join(missing))
-    st.info(
-        "Make sure you run this from the project root and that notebooks "
-        "01-03 have been run to generate the data and results:\n\n"
-        "`streamlit run dashboard/app.py`"
-    )
-    st.stop()
-
-power = load_power()
-preds = load_predictions()
-anoms = load_anomalies()
-
-# ----------------------------------------------------------------------------
-# Sidebar
-# ----------------------------------------------------------------------------
+# ---------------------------------------------------------------------------
+# Sidebar - identity and the dataset selector
+# ---------------------------------------------------------------------------
 with st.sidebar:
     st.title("Smart Grid")
     st.caption("Industrial Energy Management using IoT and Machine Learning")
+    st.markdown("---")
+
+    choice = st.selectbox(
+        "Dataset",
+        list(DATASETS.keys()),
+        index=0,
+        help="Switch between the primary benchmark and the cross-dataset validation run.",
+    )
+    CFG = DATASETS[choice]
+    st.caption(CFG["blurb"])
+
     st.markdown("---")
     st.markdown("**Student:** Saeed Sarwar Anas")
     st.markdown("**Student No:** 20068400")
@@ -87,160 +97,170 @@ with st.sidebar:
     st.markdown("**Module:** COM748 MSc Research Project")
     st.markdown("**Institution:** Ulster University")
     st.markdown("---")
-    st.markdown(
-        "[GitHub Repository]"
-        "(https://github.com/S1122A/SmartGrid-Dissertation)"
-    )
+    st.markdown("[GitHub Repository](https://github.com/S1122A/SmartGrid-Dissertation)")
     st.markdown("---")
     st.caption(
-        "Displays pre-computed results from the LSTM forecasting model and "
-        "the Isolation Forest anomaly detector."
+        "Displays pre-computed results from the LSTM forecasting model and the "
+        "Isolation Forest anomaly detector. No model is trained at run time."
     )
 
-# ----------------------------------------------------------------------------
-# Header
-# ----------------------------------------------------------------------------
-st.title("Smart Grid Energy Monitoring Dashboard")
-st.markdown(
-    "A unified view of energy demand forecasting and anomaly detection for "
-    "low-cost industrial energy management."
-)
+# ---------------------------------------------------------------------------
+# Load the selected dataset's outputs
+# ---------------------------------------------------------------------------
+preds = load_csv(CFG["pred_file"])
+anoms = load_csv(CFG["anom_file"], CFG["time_col"])
+power = load_csv(CFG["power_file"], CFG["time_col"]) if CFG["power_file"] else None
 
-# ----------------------------------------------------------------------------
-# Top metric cards
-# ----------------------------------------------------------------------------
-lstm_mae = mae(preds["Actual_kW"], preds["LSTM_Predicted_kW"])
-lstm_rmse = rmse(preds["Actual_kW"], preds["LSTM_Predicted_kW"])
+if preds is None:
+    st.error(
+        f"Results file not found: {CFG['pred_file']}\n\n"
+        "Run the corresponding notebook first, then reload this page."
+    )
+    st.stop()
+
+# ---------------------------------------------------------------------------
+# Header - always states which dataset is on screen
+# ---------------------------------------------------------------------------
+st.title("Smart Grid Energy Monitoring Dashboard")
+st.markdown(f"**Currently displaying:** {choice}")
+st.caption(CFG["blurb"])
+st.markdown("---")
+
+# ---------------------------------------------------------------------------
+# Metric cards
+# ---------------------------------------------------------------------------
+actual = preds["Actual_kW"].values
+lstm_p = preds["LSTM_Predicted_kW"].values
+lstm_mae, lstm_rmse = mae(actual, lstm_p), rmse(actual, lstm_p)
 
 c1, c2, c3, c4 = st.columns(4)
-c1.metric("LSTM Forecast MAE", f"{lstm_mae:.4f} kW")
-c2.metric("LSTM Forecast RMSE", f"{lstm_rmse:.4f} kW")
-c3.metric("Anomalies Detected", f"{len(anoms):,}")
-c4.metric("Records Monitored", f"{len(power):,}")
-
+c1.metric("LSTM Forecast MAE", f"{lstm_mae:,.4f} {CFG['unit']}"
+          if CFG["key"] == "uci" else f"{lstm_mae:,.2f} {CFG['unit']}")
+c2.metric("LSTM Forecast RMSE", f"{lstm_rmse:,.4f} {CFG['unit']}"
+          if CFG["key"] == "uci" else f"{lstm_rmse:,.2f} {CFG['unit']}")
+c3.metric("Anomalies Detected", f"{0 if anoms is None else len(anoms):,}")
+c4.metric("Records Monitored",
+          f"{len(power):,}" if power is not None else f"{len(preds):,} (test window)")
+st.caption(
+    f"Forecast metrics are computed over the saved {len(preds):,}-hour excerpt of the "
+    "held-out test set, which is the window stored in the results file. Figures quoted "
+    "over the full test partition may differ slightly."
+)
 st.markdown("---")
 
-# ----------------------------------------------------------------------------
-# Section 1: Energy consumption with anomalies
-# ----------------------------------------------------------------------------
+# ---------------------------------------------------------------------------
+# 1. Consumption and anomalies
+# ---------------------------------------------------------------------------
 st.subheader("1. Energy Consumption and Detected Anomalies")
 
-min_date = power.index.min().date()
-max_date = power.index.max().date()
-default_end = min(power.index.min() + pd.Timedelta(days=60),
-                  power.index.max()).date()
+if power is not None:
+    col_a, col_b = st.columns(2)
+    min_d, max_d = power.index.min().date(), power.index.max().date()
+    default_end = min(max_d, (power.index.min() + pd.Timedelta(days=60)).date())
+    start_date = col_a.date_input("Start date", value=min_d, min_value=min_d, max_value=max_d)
+    end_date = col_b.date_input("End date", value=default_end, min_value=min_d, max_value=max_d)
 
-col_a, col_b = st.columns(2)
-start_date = col_a.date_input("Start date", value=min_date,
-                              min_value=min_date, max_value=max_date)
-end_date = col_b.date_input("End date", value=default_end,
-                            min_value=min_date, max_value=max_date)
-
-if start_date > end_date:
-    st.warning("Start date must be on or before the end date.")
+    s_ts = pd.Timestamp(start_date)
+    e_ts = pd.Timestamp(end_date) + pd.Timedelta(days=1)
+    if s_ts > e_ts:
+        st.warning("Start date is after end date - showing no data.")
+    win = power[(power.index >= s_ts) & (power.index < e_ts)]
+    fig = go.Figure()
+    fig.add_trace(go.Scatter(x=win.index, y=win[CFG["power_col"]],
+                             mode="lines", name="Consumption",
+                             line=dict(color="#1C7293", width=1)))
+    if anoms is not None:
+        a_win = anoms[(anoms.index >= s_ts) & (anoms.index < e_ts)]
+        if len(a_win):
+            fig.add_trace(go.Scatter(x=a_win.index, y=a_win[CFG["power_col"]],
+                                     mode="markers", name="Anomaly",
+                                     marker=dict(color="#B33A3A", size=7)))
+    fig.update_layout(height=420, xaxis_title="Time",
+                      yaxis_title=f"Power ({CFG['unit']})",
+                      hovermode="x unified", margin=dict(t=30))
+    st.plotly_chart(fig, use_container_width=True)
 else:
-    mask = (power.index.date >= start_date) & (power.index.date <= end_date)
-    window = power.loc[mask]
-    amask = (anoms.index.date >= start_date) & (anoms.index.date <= end_date)
-    awin = anoms.loc[amask]
-
-    fig1 = go.Figure()
-    fig1.add_trace(go.Scatter(
-        x=window.index, y=window["Global_active_power"],
-        mode="lines", name="Consumption",
-        line=dict(color="#4C78A8", width=1)))
-    if len(awin) > 0:
-        fig1.add_trace(go.Scatter(
-            x=awin.index, y=awin["Global_active_power"],
-            mode="markers", name=f"Anomaly ({len(awin)})",
-            marker=dict(color="#E45756", size=6)))
-    fig1.update_layout(
-        height=420, margin=dict(l=20, r=20, t=30, b=20),
-        xaxis_title="Date", yaxis_title="Global Active Power (kW)",
-        legend=dict(orientation="h", yanchor="bottom", y=1.02,
-                    xanchor="right", x=1))
-    st.plotly_chart(fig1, use_container_width=True)
-    st.caption(
-        f"Showing {len(window):,} hourly records with {len(awin)} anomalies "
-        "flagged in the selected window."
+    # Tetouan: the full hourly series is regenerated by notebook 04 rather than
+    # stored, so the flagged records are shown on their own timeline.
+    st.info(
+        "For this dataset the dashboard plots the flagged records directly: the full "
+        "hourly series is regenerated by notebook 04 rather than stored in the repository."
     )
+    if anoms is not None:
+        fig = go.Figure()
+        fig.add_trace(go.Scatter(x=anoms.index, y=anoms[CFG["power_col"]],
+                                 mode="markers", name="Anomaly",
+                                 marker=dict(color="#B33A3A", size=8)))
+        fig.update_layout(height=420, xaxis_title="Time",
+                          yaxis_title=f"Consumption ({CFG['unit']})",
+                          margin=dict(t=30))
+        st.plotly_chart(fig, use_container_width=True)
+        st.caption(
+            f"{len(anoms)} records flagged by the Isolation Forest. Note the "
+            "concentration in the summer months - heat-driven demand peaks."
+        )
+        with st.expander("View flagged records"):
+            st.dataframe(anoms, use_container_width=True)
 
 st.markdown("---")
 
-# ----------------------------------------------------------------------------
-# Section 2: LSTM forecast vs actual
-# ----------------------------------------------------------------------------
+# ---------------------------------------------------------------------------
+# 2. Forecast vs actual
+# ---------------------------------------------------------------------------
 st.subheader("2. LSTM Demand Forecast vs Actual")
+show_baselines = st.checkbox("Show baseline models", value=False)
 
-show_baselines = st.checkbox(
-    "Show baseline models (Naive, Moving Average)", value=False)
-
-x = list(range(len(preds)))
 fig2 = go.Figure()
-fig2.add_trace(go.Scatter(x=x, y=preds["Actual_kW"], mode="lines",
-                          name="Actual", line=dict(color="#222222", width=2)))
-fig2.add_trace(go.Scatter(x=x, y=preds["LSTM_Predicted_kW"], mode="lines",
-                          name="LSTM Forecast",
-                          line=dict(color="#4C78A8", width=2)))
+fig2.add_trace(go.Scatter(y=preds["Actual_kW"], mode="lines", name="Actual",
+                          line=dict(color="#13293D", width=2)))
+fig2.add_trace(go.Scatter(y=preds["LSTM_Predicted_kW"], mode="lines", name="LSTM forecast",
+                          line=dict(color="#065A82", width=2, dash="dash")))
 if show_baselines:
-    fig2.add_trace(go.Scatter(x=x, y=preds["Naive_Predicted_kW"], mode="lines",
-                              name="Naive",
-                              line=dict(color="#F58518", width=1, dash="dot")))
-    fig2.add_trace(go.Scatter(x=x, y=preds["MA_Predicted_kW"], mode="lines",
-                              name="Moving Avg",
-                              line=dict(color="#54A24B", width=1, dash="dot")))
-fig2.update_layout(
-    height=420, margin=dict(l=20, r=20, t=30, b=20),
-    xaxis_title="Time step (test-set hours)",
-    yaxis_title="Global Active Power (kW)",
-    legend=dict(orientation="h", yanchor="bottom", y=1.02,
-                xanchor="right", x=1))
+    if "Naive_Predicted_kW" in preds:
+        fig2.add_trace(go.Scatter(y=preds["Naive_Predicted_kW"], mode="lines",
+                                  name="Naive", line=dict(color="#9FB4C4", width=1)))
+    if "MA_Predicted_kW" in preds:
+        fig2.add_trace(go.Scatter(y=preds["MA_Predicted_kW"], mode="lines",
+                                  name="Moving average", line=dict(color="#C77D0A", width=1)))
+fig2.update_layout(height=430, xaxis_title="Hours into the held-out test window",
+                   yaxis_title=f"Power ({CFG['unit']})", hovermode="x unified",
+                   margin=dict(t=30))
 st.plotly_chart(fig2, use_container_width=True)
-st.caption(
-    f"First {len(preds)} hours of the held-out test set. The LSTM tracks "
-    "actual demand more closely than the baselines."
-)
-
 st.markdown("---")
 
-# ----------------------------------------------------------------------------
-# Section 3: Forecasting model comparison
-# ----------------------------------------------------------------------------
+# ---------------------------------------------------------------------------
+# 3. Model comparison
+# ---------------------------------------------------------------------------
 st.subheader("3. Forecasting Model Comparison")
 
-comp = pd.DataFrame({
-    "Model": ["Naive", "Moving Average", "LSTM"],
-    "MAE": [mae(preds["Actual_kW"], preds["Naive_Predicted_kW"]),
-            mae(preds["Actual_kW"], preds["MA_Predicted_kW"]),
-            mae(preds["Actual_kW"], preds["LSTM_Predicted_kW"])],
-    "RMSE": [rmse(preds["Actual_kW"], preds["Naive_Predicted_kW"]),
-             rmse(preds["Actual_kW"], preds["MA_Predicted_kW"]),
-             rmse(preds["Actual_kW"], preds["LSTM_Predicted_kW"])],
-})
+rows = []
+for label, col in [("Naive", "Naive_Predicted_kW"),
+                   ("Moving Average", "MA_Predicted_kW"),
+                   ("LSTM", "LSTM_Predicted_kW")]:
+    if col in preds:
+        rows.append({"Model": label,
+                     f"MAE ({CFG['unit']})": mae(actual, preds[col].values),
+                     f"RMSE ({CFG['unit']})": rmse(actual, preds[col].values)})
+comp = pd.DataFrame(rows)
 
-col_c, col_d = st.columns([3, 2])
-with col_c:
+left, right = st.columns([2, 1])
+with left:
     fig3 = go.Figure()
-    fig3.add_trace(go.Bar(x=comp["Model"], y=comp["MAE"], name="MAE",
-                          marker_color="#4C78A8"))
-    fig3.add_trace(go.Bar(x=comp["Model"], y=comp["RMSE"], name="RMSE",
-                          marker_color="#F58518"))
-    fig3.update_layout(
-        height=380, margin=dict(l=20, r=20, t=30, b=20), barmode="group",
-        yaxis_title="Error (kW)",
-        legend=dict(orientation="h", yanchor="bottom", y=1.02,
-                    xanchor="right", x=1))
+    fig3.add_trace(go.Bar(x=comp["Model"], y=comp[f"MAE ({CFG['unit']})"],
+                          name="MAE", marker_color="#065A82"))
+    fig3.add_trace(go.Bar(x=comp["Model"], y=comp[f"RMSE ({CFG['unit']})"],
+                          name="RMSE", marker_color="#1C7293"))
+    fig3.update_layout(height=380, barmode="group",
+                       yaxis_title=f"Error ({CFG['unit']})", margin=dict(t=30))
     st.plotly_chart(fig3, use_container_width=True)
-with col_d:
-    st.markdown("**Error metrics (lower is better)**")
-    st.dataframe(
-        comp.style.format({"MAE": "{:.4f}", "RMSE": "{:.4f}"}),
-        hide_index=True, use_container_width=True)
-    best = comp.loc[comp["MAE"].idxmin(), "Model"]
-    st.success(f"Best model: {best} (lowest MAE)")
+with right:
+    st.dataframe(comp.set_index("Model").round(4), use_container_width=True)
+    best = comp.loc[comp[f"MAE ({CFG['unit']})"].idxmin(), "Model"]
+    st.success(f"Lowest error: **{best}**")
 
 st.markdown("---")
 st.caption(
-    "Smart Grid Sensor Network for Industrial Energy Management | "
-    "COM748 MSc Research Project | Ulster University"
+    "All figures are computed from stored model outputs. To display a different "
+    "dataset, run its notebook to regenerate the results files, then select it "
+    "from the sidebar."
 )
