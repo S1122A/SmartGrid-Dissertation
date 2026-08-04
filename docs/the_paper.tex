@@ -36,7 +36,9 @@ anomaly detection, all surfaced through a real-time dashboard. Using the UCI
 Individual Household Electric Power Consumption dataset, the LSTM forecaster
 achieved a mean absolute error (MAE) of 0.3707~kW, outperforming a naive
 baseline by 8.8\% and a 24-hour moving-average baseline by 34.9\% on unseen
-test data. The contribution is an affordable, open-source, end-to-end pipeline
+test data. Cross-dataset validation on the Tetouan City load confirmed that the unchanged
+pipeline transfers across scales, improving on the same baselines by 62.0\% and
+87.0\%. The contribution is an affordable, open-source, end-to-end pipeline
 that lowers the barrier to intelligent energy management for resource-
 constrained organisations.
 \end{abstract}
@@ -760,7 +762,87 @@ showed unusual \emph{combinations} of readings---for example, elevated intensity
 and sub-metering activity without an extreme total-power value---that a
 single-feature rule cannot detect by construction. This is the concrete benefit
 of the multivariate approach anticipated in the literature review.
- 
+
+\subsection{Cross-Dataset Validation on the Tetouan City Dataset}
+To assess whether the pipeline generalises beyond a single household, the
+complete forecasting workflow was re-applied, unchanged, to a second public
+benchmark: the Power Consumption of Tetouan City dataset, comprising 52{,}416
+ten-minute records for the year 2017 across three distribution zones of
+Tetouan, Morocco, together with meteorological variables. The data were
+resampled to hourly resolution (8{,}736 records, no missing values), the three
+zone loads were aggregated into a total city consumption, and the same
+24-hour sliding window and chronological 70/15/15 split were applied (6{,}115
+training, 1{,}310 validation, and 1{,}311 test samples), with identical model
+architecture and training configuration.
+
+Table~\ref{tab:tetouan} reports the results. The LSTM achieved an MAE of
+1{,}521.60~kW against a naive baseline of 4{,}007.33~kW and a 24-hour moving
+average of 11{,}695.04~kW---improvements of 62.0\% and 87.0\%
+respectively---with a MAPE of 2.41\% and a normalised MAE of 2.36\% of mean
+load; Figure~\ref{fig:tetforecast} shows the close tracking of the smooth
+city-scale series. Forecasting accuracy is markedly higher than on the
+household data, which is expected: a city-scale load aggregates thousands of
+consumers into a smooth, strongly periodic series, whereas a single household
+is dominated by irregular appliance events. Notably, MAPE is a reliable metric
+here because city-scale consumption never approaches zero, in contrast to the
+household series. Together the two evaluations indicate that the pipeline
+transfers without modification across load scales, and that its advantage over
+the baselines widens as the underlying series becomes more regular.
+
+\begin{table}[t]
+\centering
+\caption{Forecasting performance on the Tetouan City test set}
+\label{tab:tetouan}
+\small
+\renewcommand{\arraystretch}{1.3}
+\begin{tabular}{|l|c|c|c|c|}
+\hline
+\textbf{Model} & \textbf{MAE (kW)} & \textbf{RMSE (kW)} &
+\textbf{MAPE (\%)} & \textbf{nMAE (\%)}\\
+\hline
+Naive & 4{,}007.33 & 5{,}465.53 & 6.24 & 6.21\\
+\hline
+Moving Average & 11{,}695.04 & 14{,}034.60 & 18.92 & 18.12\\
+\hline
+\textbf{LSTM} & \textbf{1{,}521.60} & \textbf{2{,}299.07} & \textbf{2.41} &
+\textbf{2.36}\\
+\hline
+\end{tabular}
+\end{table}
+
+\begin{figure}[t]
+  \centering
+  \includegraphics[width=\columnwidth]{images/06_tetouan_forecast.png}
+  \caption{LSTM forecast against actual city-scale demand on the Tetouan test
+  set.}
+  \label{fig:tetforecast}
+\end{figure}
+
+The anomaly detector was likewise re-applied, operating multivariately on
+total consumption together with the meteorological features. It flagged 88 of
+the 8{,}736 hourly records, of which only 7 coincided with the 35 flagged by
+the univariate Z-score rule (F1 $= 0.1138$). This low agreement is expected by
+construction rather than indicative of failure: the smooth, seasonal
+city-scale load produces few $|z|>3$ extremes for the univariate rule to
+catch, while the multivariate detector responds to unusual
+\emph{weather--demand combinations} invisible to a consumption-only threshold.
+Consistent with this interpretation, the 81 records flagged only by the
+Isolation Forest concentrate in July and August during afternoon and evening
+hours---heat-driven demand peaks in which high temperature and high load
+co-occur atypically; this seasonal concentration is visible in
+Figure~\ref{fig:tetanom}. The two datasets thus illustrate complementary
+regimes: on volatile household data the multivariate detector largely agrees
+with the statistical rule while adding a margin of combination anomalies,
+whereas on smooth aggregated data its value lies almost entirely in the
+multivariate patterns the univariate rule cannot represent.
+
+\begin{figure}[t]
+  \centering
+  \includegraphics[width=\columnwidth]{images/07_tetouan_anomalies.png}
+  \caption{Isolation Forest detections on the Tetouan series, concentrated in
+  summer demand peaks.}
+  \label{fig:tetanom}
+\end{figure} 
 \subsection{Discussion}
 Taken together, the results support the central claim of this work: that
 capable energy analytics can be delivered with lightweight, low-cost methods.
@@ -774,11 +856,10 @@ the complete pipeline has been integrated into a working monitoring dashboard.
 Several limitations should be acknowledged. The forecasting metrics are reported
 over a bounded test window rather than the full multi-year series, and the
 anomaly evaluation, lacking labelled faults, is necessarily an agreement study
-rather than a measurement of true detection accuracy. The models were also
-trained on a single residential dataset; although this dataset is a
-well-established benchmark, industrial load profiles may differ, and validation
-on a second, more industrial dataset is identified as the immediate next step to
-strengthen external validity. Finally, both models are presently black boxes;
+rather than a measurement of true detection accuracy. The models were trained on a residential and a city-scale dataset; the
+cross-dataset validation of Section~VI-C confirms the pipeline's
+transferability across scales, although validation on live industrial sensor
+data remains future work. Finally, both models are presently black boxes;
 integrating post-hoc explanation would improve operator trust in a deployed
 setting. These limitations are revisited in Section~\ref{sec:conclusion}.
 
