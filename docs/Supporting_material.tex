@@ -1,0 +1,1162 @@
+\documentclass[11pt,a4paper]{article}
+\usepackage[margin=2.5cm]{geometry}
+\usepackage{newtxtext,newtxmath}
+\usepackage{graphicx}
+\usepackage{float}
+\usepackage{amsmath,amssymb}
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+\usepackage[hidelinks]{hyperref}
+\graphicspath{{./}{figs/}{results/}{sm_figs/}}
+\setlength{\parskip}{4pt}
+
+\begin{document}
+
+\begin{titlepage}
+\centering
+\vspace{1cm}
+\includegraphics[width=6cm]{images/ulster-university-logo-png_seeklogo-364495.png}\par
+\vspace{1cm}
+{\fontsize{22}{26}\selectfont\bfseries
+Smart Grid Sensor Network for Industrial Energy Management Using IoT and Machine Learning\par}
+\vspace{1.2cm}
+{\fontsize{18}{22}\selectfont\bfseries Supporting Material\par}
+\vspace{1cm}
+{\fontsize{16}{20}\selectfont Saeed Sarwar Anas\par}\vspace{0.4cm}
+{\fontsize{15}{19}\selectfont Student Number: 20068400\par}\vspace{0.4cm}
+{\fontsize{15}{19}\selectfont Supervisor: Dr Anwar Haq\par}\vspace{0.4cm}
+{\fontsize{15}{19}\selectfont MSc Computer Science (COM748 Masters Research Project)\par}\vspace{0.4cm}
+{\fontsize{14}{18}\selectfont Ulster University\par}
+\vfill
+\end{titlepage}
+
+\tableofcontents
+\clearpage
+
+%========================== 1. EXTENDED LITERATURE REVIEW ====================
+\section{Extended Literature Review}
+
+This section deepens the review presented in the research paper. Because the
+paper is bound by a strict page limit, its literature chapter states conclusions
+compactly; here the underlying evidence is set out in full---the surveys that
+frame the field, the theoretical foundations of the two algorithms, the
+comparative strands within each research community, and the explicit mapping
+from that evidence to the design decisions taken in this project.
+
+\subsection{Context and Problem Background}
+Industry consumes roughly one third of global energy
+\cite{international2022international}, yet most small and medium-sized
+enterprises (SMEs) have no visibility of their own consumption because
+commercial monitoring platforms cost tens of thousands of pounds. The research
+paper establishes this gap; three practical constraints shaped the project
+beyond what the paper could elaborate: a hardware budget of the order of
+\pounds30, the complete absence of labelled fault data in public energy
+datasets, and a requirement that every result be independently reproducible.
+The project is framed as Design Science Research
+\cite{hevner2004design,peffers2007design}, conducted under established
+project-research guidance \cite{zina2021essential}. Framing the work this way
+matters because it makes the built system itself the unit of assessment: the
+contribution is judged by whether the artefact demonstrably solves the stated
+problem, not by novelty of algorithm alone.
+
+The wider technical context is the transformation of the electricity network
+into a sensor-rich, communication-enabled system. Early surveys of smart grid
+communication infrastructure \cite{fan2012smart,yan2012survey} document the
+requirements and open challenges of that transition, and more recent surveys of
+IoT-enabled smart grids \cite{goudarzi2022survey,kirmani2022survey} show that
+sensing, communication, and analytics are now treated as a single integrated
+stack rather than as separate engineering concerns. This project sits at the
+downstream end of that stack---measurement and analytics at the point of
+use---and inherits from these surveys the assumption that low-cost networked
+sensing is now economically realistic, an assumption formalised by the Industry
+4.0 and Industrial IoT paradigm \cite{munirathinam2020industry}.
+
+\subsection{Key Theoretical Foundations}
+Two algorithms carry the analytical load, and both rest on well-established
+theory.
+
+The \emph{Long Short-Term Memory} network \cite{hochreiter1997long} is a
+recurrent architecture designed to overcome the vanishing-gradient problem that
+prevents simple recurrent networks from learning long-range dependencies. It
+augments the recurrent cell with three multiplicative gates---forget, input, and
+output---together with an additive cell state that carries information across
+many time steps with little attenuation; the governing equations are given in full in equations~(1)--(6). This gating is what allows the network to retain
+information across the daily and weekly cycles that characterise energy
+consumption, and its record in short-term load forecasting is well established
+\cite{kong2017short}. The broader deep-learning foundations on which it sits are
+set out in the standard references \cite{lecun2015deep,goodfellow2016deep}, with
+the gradient-based learning framework introduced for convolutional networks by
+LeCun et al.\ \cite{lecun1998gradient} providing the optimisation machinery
+(backpropagation through a differentiable architecture) that LSTM training also
+uses.
+
+The \emph{Isolation Forest} \cite{liu2008isolation} inverts the usual logic of
+anomaly detection. Rather than building a model of normality and measuring
+deviation from it, it constructs an ensemble of randomly partitioned trees and
+scores each observation by the average number of splits required to isolate
+it---anomalous points, being few and different, separate in short paths. Two
+properties follow directly from this construction and both matter here: the
+method requires no labels, and its cost is low because it never estimates a
+density or distance matrix. The label-scarcity problem it addresses is the
+recurring theme of the anomaly-detection literature in buildings
+\cite{himeur2021artificial}, which reviews the field and notes repeatedly that
+labelled fault data are seldom available in practice.
+
+Methodologically, Design Science Research \cite{hevner2004design,peffers2007design}
+treats the built system itself as the knowledge artefact, evaluated rather than
+merely described; its emphasis on rigorous evaluation of a constructed artefact
+is what justifies the baseline-comparison discipline applied throughout this
+project.
+
+\subsection{Extended and Deeper Related Work}
+Four research strands bear directly on the design, and each contains internal
+disagreements that the paper could only summarise.
+
+\paragraph{IoT-based energy monitoring.}
+At the residential scale, reviews of smart-home IoT applications
+\cite{alaa2017review} and of smart-meter data analysis \cite{yildiz2017recent}
+establish that fine-grained measurement combined with feedback can meaningfully
+influence consumption, while Hafeez et al.\ \cite{hafeez2020efficient} go
+further by coupling IoT sensing to price-based demand response so that load is
+actively managed rather than merely observed. At the system scale, Silva et al.\
+\cite{silva2023iot} address AC microgrids under explicit grid and security
+constraints, Rehman et al.\ \cite{rehman2022secure} foreground the security of
+an edge-based management protocol, Vijayalakshmi et al.\
+\cite{vijayalakshmi2023smart} demonstrate energy management on IoT-based
+embedded systems, and Ahmed et al.\ \cite{ahmed2020machine} apply machine
+learning to energy management across smart grid and renewable-energy districts.
+The most complete integrated platform is that of Bin Mofidul et al.\
+\cite{bin2022real}, which combines real-time acquisition, anomaly detection, and
+monitoring within an Industrial IoT infrastructure spanning edge and cloud AI.
+The recurring limitation across this strand is one of scale and cost: attention
+concentrates on individual homes at one end and utility-scale systems at the
+other, and the more capable integrated platforms achieve their breadth through
+edge--cloud infrastructure whose expense reintroduces precisely the barrier that
+constrains SMEs.
+
+\paragraph{Machine learning for demand forecasting.}
+Reviews by Raza and Khosravi \cite{raza2015review} and Aguiar-P\'erez and
+P\'erez-Ju\'arez \cite{aguiar2023insight} trace the field's decisive shift from
+classical statistical models towards deep learning. Within that shift, Kong et
+al.\ \cite{kong2017short} established the LSTM's effectiveness on short-term
+residential load, and Inala et al.\ \cite{inala2025enhancing} apply the same
+family of models to household data in a smart-grid setting. The interesting
+disagreement is about architectural complexity: Mahjoub et al.\
+\cite{mahjoub2022predicting} benchmark LSTM against multi-layer GRU and drop-GRU
+variants and surface an explicit accuracy--efficiency trade-off, whereas Wen et
+al.\ \cite{wen2024deep} pursue higher accuracy through a hybrid deep model at
+the cost of substantially greater complexity---a cost that conflicts with
+low-cost deployment. Cutting across all of this, Makridakis et al.\
+\cite{makridakis2018statistical} demonstrate that machine-learning forecasters
+do not automatically outperform simpler statistical methods and argue for
+evaluation against strong baselines; this project treats that finding as
+binding rather than advisory. A further gap is that most studies optimise
+accuracy on a single dataset and report little on deployability---model size,
+inference cost, or suitability for constrained hardware---which is exactly the
+dimension that matters here.
+
+\paragraph{Anomaly detection in energy systems.}
+Himeur et al.\ \cite{himeur2021artificial} provide the taxonomy for this strand
+and identify label scarcity as its central tension, which divides the literature
+into two camps. The supervised camp applies classifiers to labelled faults: Chen
+et al.\ \cite{chen2024effective} combine XGBoost and LSTM for Industrial IoT
+anomaly detection, Aly and Behiry \cite{aly2025enhancing} compare logistic
+boosting, random forest, and support vector machines for IoT-driven factories,
+and Sahu and Mukherjee \cite{sahu2020machine} apply machine learning to IoT
+network anomalies. These methods can be highly accurate, but they presuppose
+labelled examples of the very faults they are meant to catch---data that real
+deployments rarely possess. The unsupervised camp avoids that dependency:
+Jesmeen et al.\ \cite{jesmeen2021unsupervised} apply clustering to energy time
+series, and Pereira and Silveira \cite{pereira2018unsupervised} use variational
+recurrent autoencoders with attention, achieving strong results at considerable
+computational weight. The decisive evidence for this project comes from Jamshidi
+et al.\ \cite{jamshidi2025lightweight}, who pair an autoencoder with an
+Isolation Forest specifically for resource-constrained green IoT edge gateways,
+confirming that the Isolation Forest belongs at the lightweight end of the
+spectrum where this project must operate.
+
+\paragraph{Low-cost embedded and edge computing.}
+The feasibility of the sensing layer rests on this strand. TinyML
+\cite{warden2019tinyml} established that machine-learning inference can be
+hosted on low-power microcontrollers, and applied studies confirm it: Ken et
+al.\ \cite{ken2024advancing} perform real-time ozone prediction on
+cost-effective edge devices, and---most directly relevant---Baskar et al.\
+\cite{baskar2024edge} deploy the Arduino Nano BLE Sense, the same board adopted
+here, for real-time industrial wastewater monitoring. The gap in this strand is
+integrative rather than technical: edge-ML studies typically address a single
+classification or regression task and rarely combine forecasting, anomaly
+detection, and visualisation into one reproducible end-to-end system.
+
+\paragraph{Synthesis.}
+Taken together, the four strands leave a specific opening. Monitoring is mature
+but concentrated away from the industrial SME; the LSTM is effective but must be
+validated against simple baselines and is seldom assessed for deployability;
+lightweight unsupervised detection is the right fit where labels are scarce and
+compute is limited; and low-cost edge hardware is proven for sensing. What is
+absent is a single affordable, openly reproducible system that integrates all
+four for the SME context---which is the gap this project addresses.
+
+\subsection{Literature-Informed Design Choices}
+Table~\ref{tab:litmap} makes the inheritance explicit: each design decision in
+this project is traced to the evidence that motivated it.
+
+\begin{table}[htbp]
+\centering
+\caption{Mapping from literature evidence to design decisions in this project}
+\label{tab:litmap}
+\small
+\renewcommand{\arraystretch}{1.35}
+\begin{tabular}{|p{4.3cm}|p{5.6cm}|p{4.5cm}|}
+\hline
+\textbf{Evidence from the literature} & \textbf{Implication} & \textbf{Decision taken here}\\
+\hline
+ML does not automatically beat simple statistical methods \cite{makridakis2018statistical} &
+Superiority must be demonstrated, not assumed &
+Naive and 24-hour moving-average baselines evaluated on identical data\\
+\hline
+Labelled faults are rarely available \cite{himeur2021artificial,jesmeen2021unsupervised} &
+Supervised detectors are impractical for real deployment &
+Unsupervised Isolation Forest \cite{liu2008isolation}; results framed as agreement, not accuracy\\
+\hline
+Deep autoencoders are powerful but heavy; IF suits constrained gateways \cite{pereira2018unsupervised,jamshidi2025lightweight} &
+Computational footprint is a first-order constraint &
+Isolation Forest chosen over autoencoder-based detection\\
+\hline
+LSTM captures multi-scale temporal structure \cite{hochreiter1997long,kong2017short} &
+A gated recurrent model fits diurnal and weekly cycles &
+Two-layer LSTM with a 24-hour lookback window\\
+\hline
+Added complexity buys accuracy at a deployability cost \cite{mahjoub2022predicting,wen2024deep} &
+Prefer the simpler model where it generalises as well &
+Simpler variant (V1) selected over the deeper V2 on held-out error\\
+\hline
+Capable integrated platforms rely on costly edge--cloud infrastructure \cite{bin2022real,silva2023iot} &
+Affordability must be designed in, not retrofitted &
+$\sim$\pounds30 sensing board; CPU-only training; open-source stack\\
+\hline
+The chosen board is proven for industrial edge sensing \cite{baskar2024edge,warden2019tinyml} &
+Hardware risk is low &
+Arduino Nano 33 BLE Sense adopted for the sensing layer\\
+\hline
+Sound evaluation requires leakage-free protocols \cite{makridakis2018statistical} &
+Split before scaling; never fit on future data &
+Chronological 70/15/15 split; scaler fitted on training partition only\\
+\hline
+Few studies release a complete replicable pipeline &
+Reproducibility is itself a contribution &
+Code, processed data, models, and results published openly\\
+\hline
+Black-box models hinder operator trust \cite{lundberg2017unified} &
+Explanation is needed before operational adoption &
+SHAP-based explanation specified as the next development step\\
+\hline
+\end{tabular}
+\end{table}
+
+Two further choices deserve comment. The UCI household dataset
+\cite{hebrail2012individual} was selected as the primary benchmark for its
+length, continuity, and standing in the literature, and TensorFlow/Keras
+\cite{abadi2016tensorflow} as the framework for its high-level API and its
+TensorFlow~Lite route onto microcontrollers. By contrast, the Smart Grid
+Stability dataset \cite{arzamasov2018towards} was examined and deliberately
+excluded: it poses a binary stability-classification problem rather than
+continuous demand forecasting, so it would not exercise the pipeline developed
+here---an example of a scoping decision made on evidence rather than
+convenience.
+
+
+\section{System/Software Development Life Cycle and Development Process}
+
+\subsection{Adopted Lifecycle and Justification}
+The project followed Design Science Research
+\cite{hevner2004design,peffers2007design} operationalised as an incremental,
+experimental lifecycle mapped onto conventional SDLC stages---analysis,
+requirements and feasibility, design, implementation, testing, and
+deployment/configuration. A plan-driven (waterfall) model was rejected because
+requirements were exploratory: model architectures, dataset treatments, and
+evaluation designs could only be fixed by building and measuring. Each weekly
+supervision meeting closed one increment and set the next---in Scrum terms, a
+sprint cadence (Section~3). Research planning practices follow O'Leary
+\cite{zina2021essential}. The stages below are presented with the evidence each
+produced and the justification for the choices made within it. Adopting an incremental cycle also matched the assessment rhythm: each supervision meeting acted as a natural iteration boundary at which scope could be re-planned with the product owner, keeping the project responsive rather than committing early to a fixed plan.
+
+\subsection{SDLC Stages with Evidence and Justification}
+
+\paragraph{Analysis.}
+The problem context---SME energy blindness, its scale, and its causes---was
+analysed through the literature (Section~1 and the paper's Sections~II and~IV).
+Stakeholders were identified as SME owners and facility operators; the analysed
+constraints (cost, label scarcity, reproducibility) were distilled into the
+paper's parameter table, which acts as the analysis-phase output binding
+evidence to design. Conducting analysis evidence-first prevented committing to a
+solution before the problem was characterised.
+
+\paragraph{Requirements and Feasibility.}
+Functional requirements: (F1) forecast the next hour of demand; (F2) flag
+anomalous consumption without labelled training data; (F3) present forecasts,
+anomalies, and metrics in one real-time view; (F4) capture live environmental
+readings from low-cost hardware; (F5) make every result reproducible from a
+public repository. Non-functional requirements: sensing hardware of the order of
+\pounds30; models trainable on a consumer CPU; open-source stack; leakage-free
+evaluation. Feasibility was confirmed on four axes before design: technical
+(TinyML precedent \cite{warden2019tinyml} and a prior deployment of the same
+board \cite{baskar2024edge}); data (two public benchmarks
+\cite{hebrail2012individual}); economic (total hardware under \pounds50
+including an optional smart plug); and schedule (weekly increments within the
+module timeline).
+
+\paragraph{Design.}
+Design produced a set of artefacts, each presented beside the discussion it supports rather than gathered in an appendix. The overall shape of the system is the four-layer architecture of Figure~\ref{fig:arch} (discussed in Section~2.6); the interface was designed as the wireframe of Figure~\ref{fig:wireframe}; data movement is captured by the Level-1 data-flow diagram of Figure~\ref{fig:dfd}; the file-based stores by the schema of Figure~\ref{fig:schema}; their organisation by the data-architecture diagram of Figure~\ref{fig:dataarch}; the code structure by the component diagram of Figure~\ref{fig:component}; and the system's behaviour by the activity diagram of Figure~\ref{fig:activity} and the sequence diagram of Figure~\ref{fig:sequence}. Algorithm selection followed the literature-derived parameters (Section~1.4). On applicability: ER diagrams and BPMN are not used because the system stores versioned CSV files rather than a relational database and automates no business process; formal class diagrams add little to largely procedural notebook code, so structural documentation is carried by the component diagram instead. Stating these judgements is itself part of the design record.
+\begin{figure}[htbp]\centering
+\includegraphics[width=.85\linewidth]{images/Architecture_Professor_Format.png}
+\caption{\small\itshape Four-layer system architecture: IoT sensing, data pipeline, machine-learning, and visualisation layers, with data flowing strictly downward.}
+\label{fig:arch}
+\end{figure}
+
+Figure~\ref{fig:arch} presents this architecture as four horizontal layers. The uppermost layer is the IoT sensing tier, built on the Arduino Nano~33 BLE Sense and its onboard environmental sensors; beneath it the data-pipeline tier performs ingestion, cleaning, resampling, windowing, and chronological splitting; the machine-learning tier then hosts the LSTM forecaster and the Isolation~Forest detector operating on the prepared data; and the lowest tier is the Streamlit visualisation layer. The downward arrows emphasise that data moves in one direction only, from sensing through analysis to presentation, which is what allows each tier to be developed and tested in isolation.
+
+\begin{figure}[htbp]\centering
+\includegraphics[width=.9\linewidth]{images/B10_dashboard_wireframe.png}
+\caption{\small\itshape Dashboard wireframe: the layout design of the Streamlit MVP --- sidebar identity, four metric cards, and three stacked chart sections.}
+\label{fig:wireframe}
+\end{figure}
+
+Figure~\ref{fig:wireframe} is the wireframe that fixed the dashboard's layout before implementation. A persistent left sidebar carries the project's identity and repository link; the main column opens with a header and a row of four metric cards giving an at-a-glance summary of forecast error, anomaly count, and record total; and three stacked sections follow---consumption with anomaly markers and a date-range control, the forecast-versus-actual chart with a baseline toggle, and the model-comparison chart with its metrics table. The layout deliberately places the highest-level summary at the top and the supporting detail below, reflecting the recognition-over-recall principle discussed in Section~2.3.
+
+\begin{figure}[htbp]\centering
+\includegraphics[width=.92\linewidth]{images/B11_data_flow_diagram.png}
+\caption{\small\itshape Level-1 data-flow diagram: external data sources feed the preprocessing process, which writes the file stores that the models and dashboard consume.}
+\label{fig:dfd}
+\end{figure}
+
+Figure~\ref{fig:dfd} is the Level-1 data-flow diagram. The three external sources on the left---the UCI and Tetouan benchmark files and the planned Arduino feed---enter a single preprocessing process (P1), whose cleaned output is written to the file stores D1--D3. Two analytical processes then read those stores: the LSTM forecaster (P2) and the Isolation~Forest detector (P3), each writing its own results back to a store, from which the dashboard process (P4) reads to serve the operator. Modelling the stores explicitly makes clear that the models never read raw data directly and that the dashboard never runs a model, only reads results---the separation that keeps the live interface fast and robust.
+
+
+\paragraph{Implementation.}
+Implementation proceeded in increments matching the sprint log (Table~\ref{tab:sprint}):
+the data pipeline and exploratory analysis (notebook~01), the LSTM forecaster
+with baselines (notebook~02), the multivariate Isolation Forest with the
+agreement study (notebook~03), the cross-dataset validation (notebook~04), the
+Streamlit dashboard (\texttt{dashboard/app.py}), and the deployment tooling
+(Arduino firmware and two Python loggers). Conventions applied throughout: fixed
+seeds, in-notebook \texttt{\%pip} installs to bind packages to the kernel
+environment, and a commit-per-increment Git history that serves as
+implementation evidence.
+
+\begin{figure}[H]\centering
+\includegraphics[width=.9\textwidth]{images/01_exploratory_analysis.png}
+\caption{\small\itshape Exploratory analysis of the UCI household dataset: the raw minute-level series, its distribution, and the missing-value pattern that motivated forward-fill imputation.}
+\label{fig:eda}
+\end{figure}
+
+Figure~\ref{fig:eda} summarises the exploratory analysis of the UCI data. The upper panel plots the full four-year active-power series, revealing both its overall stability and the frequent short-lived spikes of household activity; the lower panels show the monthly averages, which expose a mild seasonal variation, and the average consumption by hour of day, which exhibits the pronounced morning and evening peaks typical of domestic demand. Together they justify two later decisions: forward-filling the visible gaps, and adopting an hourly resolution that preserves the daily cycle while smoothing minute-level noise.
+
+\begin{figure}[H]\centering
+\includegraphics[width=.9\textwidth]{images/02_pattern_analysis.png}
+\caption{\small\itshape Consumption pattern analysis for the UCI data, showing the daily and weekly periodicity that the 24-hour lookback window is designed to exploit.}
+\label{fig:pattern}
+\end{figure}
+
+Figure~\ref{fig:pattern} isolates the periodic structure the forecaster must learn. The day-of-week panel shows a modest weekday--weekend difference; the distribution panel confirms the strong right-skew of the readings, with most hours at low load and a long tail of high-consumption events; the sub-metering panel attributes consumption across the three circuits; and the yearly-trend panel shows the gradual seasonal drift. This regularity at daily and weekly scales is precisely what motivates the 24-hour lookback window.
+
+
+
+\begin{table}[htbp]
+\centering
+\caption{Dataset statistics}
+\label{tab:datasets}
+\small
+\renewcommand{\arraystretch}{1.3}
+\begin{tabular}{|l|c|c|}
+\hline
+\textbf{Property} & \textbf{UCI Household} & \textbf{Tetouan City}\\ \hline
+Raw records & 2{,}075{,}259 (1-min) & 52{,}416 (10-min)\\ \hline
+Span & Dec 2006 -- Nov 2010 & Year 2017\\ \hline
+Missing values & 25{,}979 (forward-filled) & 0\\ \hline
+Hourly records & 34{,}589 & 8{,}736\\ \hline
+Split 70/15/15 & 24{,}195 / 5{,}184 / 5{,}186 & 6{,}115 / 1{,}310 / 1{,}311\\ \hline
+Sequences (24 h) & 34{,}565 & 6{,}091 / 1{,}286 / 1{,}287\\ \hline
+\end{tabular}
+\end{table}
+
+Table~\ref{tab:datasets} places the two datasets side by side and shows how differently they are shaped despite passing through identical preprocessing. The UCI record is far longer (four years at minute resolution) but carries 25{,}979 missing values, whereas Tetouan is a single complete year at ten-minute resolution with none. After resampling, the row counts differ by roughly a factor of four, which explains the difference in training time reported in Section~2.9. The identical 70/15/15 chronological proportions and 24-hour windowing are what make the cross-dataset comparison legitimate rather than merely suggestive.
+
+\begin{table}[htbp]
+\centering
+\caption{LSTM hyperparameters}
+\label{tab:hyper}
+\small
+\renewcommand{\arraystretch}{1.3}
+\begin{tabular}{|l|p{9.2cm}|}
+\hline
+Lookback window & 24 hours\\ \hline
+Architecture (selected V1) & LSTM 64 $\to$ Dropout 0.2 $\to$ LSTM 32 $\to$ Dropout 0.2 $\to$ Dense 1\\ \hline
+Trainable parameters & 29{,}857\\ \hline
+Optimiser / loss & Adam (lr 0.001) / MSE\\ \hline
+Batch / epochs / early stop & 32 / up to 50 / patience 10\\ \hline
+Random seed & 42 (all libraries)\\ \hline
+\end{tabular}
+\end{table}
+
+Table~\ref{tab:hyper} records every setting needed to reproduce the forecaster exactly. The 24-hour lookback follows the diurnal structure evidenced in Figure~\ref{fig:pattern}; the two-layer 64/32 arrangement with dropout was chosen to be large enough to model the daily cycle yet small enough to train on a CPU, giving 29{,}857 trainable parameters; Adam with mean-squared-error loss is the standard pairing for regression on scaled targets; and early stopping with patience~10 halts training once validation error stops improving, which is what retained the epoch-43 checkpoint. The fixed seed of 42 applies to every library so that a clean re-run reproduces the reported figures.
+
+
+
+
+The pipeline constructed at this stage is specified in full as
+Algorithm~\ref{alg:pipeline}.
+
+\begin{algorithm}[H]
+\caption{End-to-end data pipeline applied identically to both datasets.}
+\label{alg:pipeline}
+\begin{algorithmic}[1]
+\Require raw dataset file (UCI minute-level / Tetouan 10-minute)
+\Ensure model-ready train/val/test sequences and fitted scaler
+\State load raw file; parse timestamps as the index
+\If{missing values exist} \Comment{UCI: 25{,}979}
+  \State impute by forward-fill (last observation carried forward)
+\EndIf
+\State resample to hourly means \Comment{34{,}589 / 8{,}736 rows}
+\State screen outliers with the IQR rule (per feature)
+\State split \textbf{chronologically} 70/15/15 into train, val, test
+\State fit MinMaxScaler on \textbf{train only}; transform all three splits
+\For{$t = w{+}1 \dots N$ in each split} \Comment{$w = 24$ hours}
+  \State $X \gets \text{values}[t{-}w \dots t{-}1]$;\quad $y \gets \text{value}[t]$
+\EndFor
+\State save cleaned CSV, scaler, and sequence arrays to disk
+\end{algorithmic}
+\end{algorithm}
+\noindent\textit{Narration.} Splitting (step 7) before scaler fitting (step 8)
+is the critical ordering: fitting only on the training partition guarantees no
+statistic from the future leaks into model input. Step 5 trades temporal resolution for noise reduction and tractable training on a CPU.
+
+\noindent\textbf{Feature normalisation.} Before training, each input
+feature is rescaled to the interval $[0,1]$ by min--max normalisation:
+\begin{equation}
+x' = \frac{x - x_{\min}}{x_{\max} - x_{\min}},
+\end{equation}
+where $x$ is the raw feature value, $x'$ the normalised value, and $x_{\min}$,
+$x_{\max}$ the minimum and maximum of that feature \emph{computed on the training
+partition only}. Fitting these bounds on training data alone is what prevents
+information from the validation and test periods leaking into the model input.
+Normalisation is required because the LSTM's gate activations are sensitive to
+input scale, and the raw features span very different ranges (for example,
+voltage near $240$ against reactive power near $0.1$).
+
+\noindent\textbf{Supervised sliding window.} Forecasting is framed
+as supervised learning over a fixed lookback window:
+\begin{equation}
+\hat{y}_{t} = f\!\left(x_{t-w},\,x_{t-w+1},\,\dots,\,x_{t-1}\right), \qquad w = 24,
+\end{equation}
+where $\hat{y}_t$ is the predicted consumption at hour $t$, $f(\cdot)$ is the
+trained LSTM, and $w=24$ is the window length in hours. Each training example
+therefore maps the previous twenty-four hourly observations to the next hour,
+the horizon over which the daily cycle is most informative.
+
+
+\paragraph{Testing.}
+Testing spanned data validity, reproducibility, functionality, reliability, and
+model validity; the strategy is described in Section~2.7 and the concrete test
+cases and an executable script are given in Appendix~A.
+
+\paragraph{Deployment and Configuration.}
+The software is configured for reproducible local deployment: a pinned
+\texttt{requirements.txt}, an isolated virtual environment, and a documented
+launch path. A site-specific configuration constraint---a Windows Device Guard
+policy blocking \texttt{streamlit.exe}---was resolved by launching through the
+interpreter (\texttt{python -m streamlit run dashboard/app.py}), a workaround
+now recorded in the run instructions. The physical deployment (restaurant
+environmental sensing plus single-appliance metering) is fully configured on
+paper---power strategy, placement rules, desk-test gate, and written site
+permission---and awaits hardware delivery; it is deliberately reported as
+designed and approved, not executed.
+
+\subsection{Prototype MVP and Design Principles}
+The Minimum Viable Product was defined as the dashboard serving requirements
+F1--F3 from precomputed model outputs---the smallest artefact that delivers the
+project's value proposition end-to-end. Increments beyond the MVP (cross-dataset
+validation, live sensing) extend it without changing its core. The interface
+design was assessed against Nielsen's usability heuristics: \emph{visibility of
+system status} (headline metric cards and per-chart captions reporting exactly
+what is shown); \emph{match with the real world} (kilowatts, calendar dates,
+plain-language labels); \emph{user control and freedom} (date-range selection
+and a reversible baseline toggle); \emph{consistency} (one colour and layout
+grammar across all three sections); \emph{error prevention and recovery} (a
+guarded start-up that names any missing results file and explains how to
+generate it, rather than crashing); and \emph{recognition over recall} (legends
+and titled sections so nothing must be remembered between views). In
+Shneiderman's terms the design offers informative feedback, dialogue closure
+(the best-model banner), easy reversal of actions, and a reduced short-term
+memory load. Figure~\ref{fig:wireframe} documents the layout as a wireframe.
+
+\subsection{Usability and UX Features}
+Concrete UX decisions: a sidebar carrying project identity and the repository
+link so the artefact is self-describing; four metric cards giving a five-second
+executive summary; interactive charts (zoom, hover) via Plotly; a default
+60-day window so the first paint is fast, widenable on demand; cached data
+loading so interactions feel immediate; and the demo-safe precomputed-results
+design, which guarantees that supervision demonstrations and the viva cannot be
+derailed by a live training failure.
+
+\subsection{System Architecture: Discussion}
+The four layers (Figure~\ref{fig:arch}) are separated for three reasons beyond tidiness.
+First, testability: each layer is exercised alone (the pipeline by its own
+notebook, the models by held-out metrics, the dashboard against saved files).
+Second, replaceability: the data source can change from benchmark CSV to live
+sensor log without touching the model layer---exactly the path the restaurant
+deployment will take. Third, failure containment: the serving layer reads files
+only, so a modelling fault cannot take the interface down. The data these layers exchange is organised as shown in the schema of Figure~\ref{fig:schema} and the data-architecture diagram of Figure~\ref{fig:dataarch}, and the modules that implement them as the component diagram of Figure~\ref{fig:component}. The layering also
+mirrors the literature-derived parameters: affordability constrains the sensing
+layer, rigour constrains the pipeline, and the two-model pairing implements the
+forecasting/detection split motivated in Section~1.
+\begin{figure}[htbp]\centering
+\includegraphics[width=.92\linewidth]{images/B12_data_schema.png}
+\caption{\small\itshape Schema of the file-based data stores. Each store is a versioned CSV keyed on the timestamp; no relational DBMS is used, so ER modelling is not applicable.}
+\label{fig:schema}
+\end{figure}
+
+Figure~\ref{fig:schema} sets out the structure of those stores. Each is a versioned CSV file keyed on its hourly timestamp: the cleaned datasets hold the electrical and, for Tetouan, meteorological features; the prediction file holds the aligned actual and forecast columns; the anomaly file holds the flagged records with their scores; and the planned deployment file holds the sensor readings. Because the data are stored as flat, timestamped files rather than in related tables, entity--relationship modelling does not apply---a design judgement recorded here rather than a modelling omission.
+
+\begin{figure}[htbp]\centering
+\includegraphics[width=.92\linewidth]{images/B13_data_architecture.png}
+\caption{\small\itshape Data architecture: raw, processed, model, results, and serving zones, all under version control, with data flowing left to right.}
+\label{fig:dataarch}
+\end{figure}
+
+Figure~\ref{fig:dataarch} shows how these stores are organised into zones and how data moves between them. Immutable raw downloads occupy the raw zone; the pipeline produces the processed zone; training produces the model store; evaluation produces the results zone; and the dashboard reads from the serving zone, with a separate future-live zone reserved for sensor logs. The entire arrangement sits under version control, so that any stage can be regenerated and the whole project reproduced from the repository.
+
+\begin{figure}[htbp]\centering
+\includegraphics[width=.8\linewidth]{images/B14_component_diagram.png}
+\caption{\small\itshape Component diagram of the repository modules (structural view). Class diagrams are of limited applicability to the largely procedural notebook code.}
+\label{fig:component}
+\end{figure}
+
+Figure~\ref{fig:component} gives the structural counterpart: the repository's modules as software components with their dependencies. The experimentation notebooks produce the trained models and the results; the dashboard component reads the results; and the deployment component (firmware and loggers) will feed the data directory once hardware is in place, with the environment and governance files supporting all of them. A component view is used in preference to a class diagram because the codebase is organised as procedural notebooks and scripts rather than an object hierarchy.
+
+
+\subsection{Pipelining of the Algorithms}
+The two algorithms are pipelined over a shared preprocessing stage: one cleaned,
+resampled hourly stream feeds the LSTM (windowed, min--max scaled) and the
+Isolation Forest (standardised, multivariate) in parallel, and their outputs are
+fused only at the serving layer, where forecast and anomaly views sit side by
+side over the same timeline. On the Tetouan variant the detector's pipeline is
+extended by chaining meteorological features with the load---a combined
+weather--demand input that produced the multivariate-only detections reported in
+the paper. \begin{figure}[htbp]\centering
+\includegraphics[width=.85\linewidth]{images/Pipeline_Professor_Format.png}
+\caption{\small\itshape End-to-end data pipeline: one cleaned hourly stream is scaled and windowed for the LSTM and standardised for the Isolation Forest, the two running in parallel before their outputs meet at the dashboard.}
+\label{fig:pipeline}
+\end{figure}
+
+Figure~\ref{fig:pipeline} illustrates the pipeline through which the two algorithms share a common preparation stage. A single cleaned, hourly stream is branched: it is min--max scaled and windowed for the LSTM and, in parallel, standardised across all features for the Isolation~Forest, with the two models' outputs converging only at the dashboard. Presenting the flow this way shows that the preprocessing effort is written once and reused, and it marks the point at which the Tetouan variant extends the detector's branch with the additional weather features.
+
+A further pipelining opportunity is recorded for future work: feeding
+the forecaster's residual (actual minus predicted) into the detector as an
+additional feature, coupling the two models rather than merely parallelising
+them.
+
+The training and selection procedure for the forecaster is given as
+Algorithm~\ref{alg:lstm}, and the detection and agreement procedure as
+Algorithm~\ref{alg:iforest}.
+
+\begin{algorithm}[H]
+\caption{LSTM demand forecaster: training, early stopping, and variant selection.}
+\label{alg:lstm}
+\begin{algorithmic}[1]
+\Require sequences $(X_{tr},y_{tr})$, $(X_{val},y_{val})$; seed $=42$
+\Ensure best model checkpoint \texttt{best\_lstm\_model.keras}
+\State set all random seeds (NumPy, TensorFlow) to 42
+\State build Sequential model: LSTM(64, return\_sequences) $\to$ Dropout(0.2)
+       $\to$ LSTM(32) $\to$ Dropout(0.2) $\to$ Dense(1) \Comment{29{,}857 params}
+\State compile(optimizer $=$ Adam($10^{-3}$), loss $=$ MSE)
+\For{epoch $= 1 \dots 50$}
+  \State train on $X_{tr}$ in batches of 32; evaluate $val\_loss$
+  \If{$val\_loss$ best so far} \State save checkpoint \EndIf
+  \If{no improvement for 10 epochs} \State \textbf{stop} \Comment{early stopping} \EndIf
+\EndFor
+\State repeat 2--8 for variant V2 (128/64/32 $+$ BatchNorm)
+\State select the variant with better \textbf{test-set} generalisation \Comment{V1}
+\State predict on $X_{test}$; invert scaling; compute MAE, RMSE, MAPE, $R^2$
+\State compute identical metrics for Naive and 24-h Moving Average
+\end{algorithmic}
+\end{algorithm}
+\noindent\textit{Narration.} The LSTM's underlying constructs are the gated
+cell updates set out with the LSTM algorithm above: the forget gate decides what
+persists, the input gate what is written, the output gate what is exposed.
+Selection at step 14 used held-out test error, not validation loss alone---V2
+achieved lower validation loss (0.003830) yet V1 generalised better, an
+instance of Occam's razor.
+
+\begin{figure}[H]\centering
+\includegraphics[width=.95\textwidth]{images/03_lstm_training_history.png}
+\caption{\small\itshape LSTM training and validation loss per epoch; the gap stays small and early stopping halts training at epoch~43, before over-fitting.}
+\label{fig:training}
+\end{figure}
+
+Figure~\ref{fig:training} plots the LSTM's learning curves. Both the loss and the mean-absolute-error panels show the training and validation metrics falling together and then flattening, with the validation curve tracking the training curve closely rather than diverging---an indication that the model is not over-fitting. The marked best epoch~(43) is the point at which early stopping retained the checkpoint, before any upturn in validation error.
+
+
+
+\noindent\textbf{LSTM cell equations.} At each time step the LSTM
+updates a cell state $C_t$ and hidden state $h_t$ through three gates. Writing
+$\sigma(\cdot)$ for the logistic sigmoid, $\tanh(\cdot)$ for the hyperbolic
+tangent, $\odot$ for element-wise multiplication, and $[h_{t-1},x_t]$ for the
+concatenation of the previous hidden state with the current input:
+\begin{align}
+f_t &= \sigma\!\left(W_f\,[h_{t-1},x_t]+b_f\right), &&\text{(forget gate)}\\
+i_t &= \sigma\!\left(W_i\,[h_{t-1},x_t]+b_i\right), &&\text{(input gate)}\\
+\tilde{C}_t &= \tanh\!\left(W_C\,[h_{t-1},x_t]+b_C\right), &&\text{(candidate state)}\\
+C_t &= f_t \odot C_{t-1} + i_t \odot \tilde{C}_t, &&\text{(cell-state update)}\\
+o_t &= \sigma\!\left(W_o\,[h_{t-1},x_t]+b_o\right), &&\text{(output gate)}\\
+h_t &= o_t \odot \tanh(C_t). &&\text{(hidden-state output)}
+\end{align}
+Here $W_{\{f,i,C,o\}}$ and $b_{\{f,i,C,o\}}$ are the learned weight matrices and
+bias vectors for each gate. Interpreted in turn: the forget gate $f_t$ decides
+what fraction of the previous cell state to retain; the input gate $i_t$ and the
+candidate $\tilde{C}_t$ determine what new information is written; the cell state
+$C_t$ combines the two; and the output gate $o_t$ selects what is exposed as the
+hidden state $h_t$ passed to the next step. This gating is precisely the
+mechanism that lets the network carry information across the long daily and
+weekly cycles in the energy series.
+
+
+\begin{algorithm}[H]
+\caption{Multivariate anomaly detection with the Isolation Forest and the agreement study against the Z-score reference.}
+\label{alg:iforest}
+\begin{algorithmic}[1]
+\Require hourly feature matrix $X$ (7 electrical features / consumption $+$
+weather); contamination $c = 0.01$; trees $T = 200$; seed $= 42$
+\Ensure anomaly labels; agreement statistics vs Z-score reference
+\State standardise each column of $X$ to mean 0, variance 1
+\State fit IsolationForest($T{=}200$, contamination $=c$, seed $=42$)
+\For{each record $x_t$} \State score $s_t \gets$ mean isolation path length \EndFor
+\State threshold $\tau$ such that fraction $c$ of records fall below $\tau$
+\State label $x_t$ \textbf{anomaly} iff $s_t < \tau$ \Comment{346 / 88 flags}
+\State reference: $z_t = (p_t - \mu_p)/\sigma_p$ on global active power
+\State reference flags where $|z_t| > 3$ \Comment{440 / 35 flags}
+\State count BOTH, IF-only, Z-only \Comment{267 / 79 / 173}
+\State precision, recall, F1 of IF flags against reference flags
+\State inspect IF-only records; characterise the feature combinations
+\end{algorithmic}
+\end{algorithm}
+\noindent\textit{Narration.} Because no ground-truth fault labels exist, step 9
+is an \emph{agreement} measure, not accuracy. Step 10 is where the multivariate
+value shows: IF-only records exhibit unusual combinations (elevated sub-metering
+without extreme total power; on Tetouan, heat-driven summer peaks) that a
+single-feature threshold cannot represent.
+
+\noindent\textbf{Anomaly-detection quantities.} Agreement between the
+Isolation Forest and the Z-score reference is measured by
+\begin{equation}
+P=\frac{TP}{TP+FP},\qquad R=\frac{TP}{TP+FN},\qquad F_1=\frac{2PR}{P+R},
+\end{equation}
+where $TP$ (both methods flag the hour), $FP$ (Isolation Forest only), and $FN$
+(Z-score only) are counted against the Z-score flags as the reference. Precision
+$P$ is the fraction of the model's flags that the reference confirms, recall $R$
+the fraction of reference flags the model recovers, and $F_1$ their harmonic
+mean. The reference itself flags an hour when the standardised global active
+power
+\begin{equation}
+z_t=\frac{x_t-\mu}{\sigma}
+\end{equation}
+satisfies $\lvert z_t\rvert>3$, i.e.\ lies more than three standard deviations
+from the mean $\mu$ (with standard deviation $\sigma$). Because no ground-truth
+fault labels exist, these quantities measure agreement between the two methods,
+not accuracy against true anomalies.
+
+
+\subsection{Testing and Validation Strategy}
+The runtime behaviour these tests exercise is depicted by the activity diagram of Figure~\ref{fig:activity} (an hourly record becoming an operator alert) and the sequence diagram of Figure~\ref{fig:sequence} (a dashboard session, including the guarded missing-file path). Five levels were applied.
+\begin{figure}[htbp]\centering
+\includegraphics[width=.62\linewidth]{images/B15_activity_diagram.png}
+\caption{\small\itshape Activity diagram (behaviour): the path from an ingested hourly record through forecasting and scoring to a normal or anomalous outcome shown on the dashboard.}
+\label{fig:activity}
+\end{figure}
+
+Figure~\ref{fig:activity} traces the behaviour of the system for a single hourly record. The record is ingested, cleaned, and scaled; the LSTM produces a forecast and the Isolation~Forest a score; a decision node then tests the score against the contamination threshold, routing the record to the anomaly path (flagged in red on the dashboard) or the normal path; and both paths converge on the dashboard update. The diagram makes the runtime decision logic explicit, which is what the functionality and reliability tests in this section exercise.
+
+\begin{figure}[htbp]\centering
+\includegraphics[width=.95\linewidth]{images/B16_sequence_diagram.png}
+\caption{\small\itshape Sequence diagram (behaviour): a dashboard session --- the app reads cached result files, computes metrics, renders the figures, and reacts to user controls, with an alternative path if a file is missing.}
+\label{fig:sequence}
+\end{figure}
+
+Figure~\ref{fig:sequence} shows the ordered interactions of a dashboard session. The operator opens the app, which reads the three cached result files from the store, computes the summary metrics, and asks the Plotly renderer to draw the figures before returning the rendered page; subsequent user actions such as changing the date range or toggling the baselines trigger only a re-render of the affected figure. The framed alternative path records the guarded behaviour when a results file is missing---the app shows targeted guidance and halts rather than crashing---which is the case verified by test~T4 in Appendix~A.
+ \emph{Data validity}: the chronological split is
+asserted in code and the scaler is fitted on the training partition only,
+closing the leakage channel. \emph{Reproducibility}: with seeds fixed at 42, a
+clean re-run regenerates the reported metrics. \emph{Functionality}: each
+dashboard section renders against the saved results, and the missing-file path
+shows guidance instead of a stack trace. \emph{Reliability}: the serial logger
+was specified to append rather than overwrite, so interruption and restart lose
+nothing; the deployment guide mandates a multi-hour desk soak test (including
+the power-bank auto-shutoff check) before any site placement. \emph{Model
+validity}: baseline comparison on identical data and the unchanged-pipeline
+cross-dataset run. Appendix~A tabulates the test cases and provides an
+executable verification script.
+
+\subsection{Performance Benchmarks}
+Efficacy is reported in Tables~\ref{tab:uci}--\ref{tab:anom}.
+
+\begin{figure}[H]\centering
+\includegraphics[width=.9\textwidth]{images/04_actual_vs_predicted.png}
+\caption{\small\itshape LSTM forecast against actual demand over the UCI held-out test window; the model tracks diurnal peaks the baselines smooth over.}
+\label{fig:uciforecast}
+\end{figure}
+
+Figure~\ref{fig:uciforecast} overlays the LSTM's forecast on the actual demand for the UCI test window. The predicted series follows the daily rises and falls of the true series closely, including the timing of the peaks; the residual differences are largest at the sharpest spikes, which is where any hourly model is necessarily least certain. Visually, this is the behaviour behind the numerical advantage over the baselines reported in Table~\ref{tab:uci}.
+
+\begin{figure}[H]\centering
+\includegraphics[width=.9\textwidth]{images/05_anomaly_detection.png}
+\caption{\small\itshape Isolation Forest detections across the UCI series (top) and the anomaly-score distribution with the 1\% contamination threshold (bottom).}
+\label{fig:ucianom}
+\end{figure}
+
+Figure~\ref{fig:ucianom} presents the anomaly-detection results on the UCI data. The upper panel marks the flagged hours in red against the consumption series, showing that detections coincide with unusually high-load periods spread across the whole span rather than clustered in one interval; the lower panel plots the distribution of anomaly scores, with the vertical line indicating the threshold set by the one-per-cent contamination assumption. The clean separation of the low-scoring tail is what gives confidence that the flags are not arbitrary.
+
+\begin{figure}[H]\centering
+\includegraphics[width=.95\textwidth]{images/06_tetouan_forecast.png}
+\caption{\small\itshape LSTM forecast against actual city-scale demand on the Tetouan test set, illustrating the smoother, more predictable aggregated load.}
+\label{fig:tetforecast}
+\end{figure}
+
+Figure~\ref{fig:tetforecast} shows the same forecasting model applied to the Tetouan city-scale load. The actual and predicted series are almost indistinguishable through most of the window, reflecting the much smoother, more regular profile of aggregated demand compared with a single household---the reason the error metrics on this dataset are markedly lower.
+
+\begin{figure}[H]\centering
+\includegraphics[width=.95\textwidth]{images/07_tetouan_anomalies.png}
+\caption{\small\itshape Isolation Forest detections on the Tetouan series, concentrated in July--August afternoon heat-driven demand peaks.}
+\label{fig:tetanom}
+\end{figure}
+
+Figure~\ref{fig:tetanom} shows the Isolation~Forest detections on the Tetouan series. The flagged hours cluster visibly in the summer months, consistent with the heat-driven afternoon and evening peaks in which high temperature and high load coincide; this seasonal concentration is the behaviour discussed in the cross-dataset analysis, where the multivariate detector responds to weather--demand combinations that a consumption-only rule cannot see.
+
+
+
+\noindent\textbf{Forecasting error metrics.} Over $n$ test
+observations, with $y_t$ the actual value, $\hat{y}_t$ the prediction, and
+$\bar{y}$ the mean of the actual values:
+\begin{align}
+\mathrm{MAE} &= \frac{1}{n}\sum_{t=1}^{n}\lvert y_t-\hat{y}_t\rvert, &
+\mathrm{RMSE} &= \sqrt{\frac{1}{n}\sum_{t=1}^{n}(y_t-\hat{y}_t)^2},\\
+\mathrm{MAPE} &= \frac{100}{n}\sum_{t=1}^{n}\left\lvert\frac{y_t-\hat{y}_t}{y_t}\right\rvert, &
+R^2 &= 1-\frac{\sum_{t=1}^{n}(y_t-\hat{y}_t)^2}{\sum_{t=1}^{n}(y_t-\bar{y})^2}.
+\end{align}
+MAE and RMSE are reported in kilowatts and are directly interpretable; RMSE
+penalises large errors more heavily through the square. MAPE expresses error as a
+percentage but becomes unstable when $y_t$ approaches zero (as household
+consumption does overnight), which is why it is reported but not relied upon.
+$R^2$ gives the proportion of variance explained, with $1$ a perfect fit and $0$
+the performance of predicting the mean.
+
+
+\begin{table}[htbp]
+\centering
+\caption{Forecasting results on the UCI held-out test window (500 hours)}
+\label{tab:uci}
+\small
+\renewcommand{\arraystretch}{1.3}
+\begin{tabular}{|l|c|c|c|c|}
+\hline
+\textbf{Model} & \textbf{MAE (kW)} & \textbf{RMSE (kW)} & \textbf{MAPE (\%)} & $\mathbf{R^2}$\\ \hline
+Naive & 0.4054 & 0.6350 & 44.07 & 0.2361\\ \hline
+Moving Average & 0.5768 & 0.7066 & 87.89 & 0.0542\\ \hline
+\textbf{LSTM} & \textbf{0.3707} & \textbf{0.5421} & 45.77 & \textbf{0.4432}\\ \hline
+\end{tabular}
+\end{table}
+
+Table~\ref{tab:uci} reports the household results. The LSTM achieves the lowest MAE, RMSE, and highest $R^2$ of the three models, reducing MAE by 8.6\,\% against the naive predictor and 35.7\,\% against the moving average, and explaining roughly twice as much variance as the naive baseline. The one apparent exception is MAPE, where the LSTM (45.77\,\%) scores marginally worse than naive (44.07\,\%); this is an artefact of dividing by near-zero overnight consumption rather than a deficiency of the model, which is why the absolute measures are treated as decisive here. The moving average performs worst throughout because its smoothing lags precisely the sharp peaks the LSTM anticipates.
+
+\begin{table}[htbp]
+\centering
+\caption{Forecasting results on the Tetouan City test set}
+\label{tab:tet}
+\small
+\renewcommand{\arraystretch}{1.3}
+\begin{tabular}{|l|c|c|c|c|}
+\hline
+\textbf{Model} & \textbf{MAE (kW)} & \textbf{RMSE (kW)} & \textbf{MAPE (\%)} & \textbf{nMAE (\%)}\\ \hline
+Naive & 4{,}007.33 & 5{,}465.53 & 6.24 & 6.21\\ \hline
+Moving Average & 11{,}695.04 & 14{,}034.60 & 18.92 & 18.12\\ \hline
+\textbf{LSTM} & \textbf{1{,}521.60} & \textbf{2{,}299.07} & \textbf{2.41} & \textbf{2.36}\\ \hline
+\end{tabular}
+\end{table}
+
+Table~\ref{tab:tet} reports the same three models on city-scale demand. The improvements are far larger---62.0\,\% over naive and 87.0\,\% over the moving average---and MAPE is now both low (2.41\,\%) and trustworthy, because aggregated city consumption never approaches zero. The normalised MAE of 2.36\,\% is included so that the error can be compared meaningfully against the household results despite the three-orders-of-magnitude difference in absolute load. Read together, Tables~B.3 and~B.4 support the central generalisation claim: the same pipeline transfers unchanged, and its margin over the baselines widens as the underlying series becomes more regular.
+
+\begin{table}[htbp]
+\centering
+\caption{Anomaly detection: agreement with the Z-score reference}
+\label{tab:anom}
+\small
+\renewcommand{\arraystretch}{1.3}
+\begin{tabular}{|l|c|c|}
+\hline
+\textbf{Quantity} & \textbf{UCI} & \textbf{Tetouan}\\ \hline
+Isolation Forest flags & 346 (1.00\%) & 88\\ \hline
+Z-score flags ($|z|>3$) & 440 & 35\\ \hline
+Flagged by both & 267 & 7\\ \hline
+IF-only (multivariate) & 79 & 81\\ \hline
+Z-only (univariate) & 173 & 28\\ \hline
+Precision / Recall / F1 & 0.7717 / 0.6068 / 0.6794 & 0.0795 / 0.2000 / 0.1138\\ \hline
+\end{tabular}
+\end{table}
+
+Table~\ref{tab:anom} sets the Isolation Forest against the Z-score reference on both datasets, and the contrast between the columns is the substantive finding. On UCI the two methods agree substantially (267 shared flags, F1~=~0.6794) while the Isolation Forest adds 79 multivariate detections the univariate rule cannot represent. On Tetouan agreement nearly collapses (7 shared flags, F1~=~0.1138)---not because the detector fails, but because a smooth seasonal load produces very few $|z|>3$ extremes, so almost all of the detector's 88 flags are weather--demand combinations invisible to a consumption-only threshold. These figures measure agreement between two methods, not accuracy against ground truth, which does not exist for either dataset.
+
+ Efficiency: the selected forecaster
+has 29{,}857 parameters and trained in roughly eleven minutes on a laptop CPU
+($\approx$13\,s/epoch on UCI; $\approx$2\,s/epoch on the smaller Tetouan set),
+converging by early stopping at epoch~43; the Isolation Forest fits in seconds.
+The dashboard is interactive on the same laptop. Inference latency was not
+formally profiled---an acknowledged gap---though the model sizes make
+edge-class deployment plausible, and quantisation is planned to reduce them
+further \cite{warden2019tinyml}.
+
+\subsection{Tools and Technologies Used}
+Python 3.11.9 with TensorFlow/Keras \cite{abadi2016tensorflow}, scikit-learn,
+pandas, and NumPy; Streamlit 1.58 for the dashboard; Jupyter for
+experimentation; Git/GitHub for version control of code, data, and results;
+Overleaf (\LaTeX, IEEEtran) for the paper and Zotero for the verified reference
+library; \texttt{ucimlrepo} for dataset retrieval; \texttt{pyserial} and
+\texttt{python-kasa} for the deployment loggers. Full versions and rationale are
+tabulated in Table~\ref{tab:tools}; the comparative selection of hardware and software is
+evaluated in Section~3.4.
+
+\begin{table}[htbp]
+\centering
+\caption{Tools and versions used, with rationale}
+\label{tab:tools}
+\small
+\renewcommand{\arraystretch}{1.3}
+\begin{tabular}{|l|l|p{5.6cm}|}
+\hline
+\textbf{Tool} & \textbf{Version / detail} & \textbf{Rationale}\\ \hline
+Python & 3.11.9 (venv) & Ecosystem standard for ML research\\ \hline
+TensorFlow / Keras & 2.x & LSTM implementation \cite{abadi2016tensorflow}\\ \hline
+scikit-learn & current & Isolation Forest, scaling, metrics\\ \hline
+pandas / NumPy & current & Data pipeline\\ \hline
+Streamlit & 1.58.0 & Dashboard; run via \texttt{python -m} under Device Guard\\ \hline
+pyserial / python-kasa & current & Deployment loggers (sensor / smart plug)\\ \hline
+Git / GitHub & public repo & Versioned, reproducible artefact\\ \hline
+Overleaf + Zotero & IEEEtran / 43-entry verified library & Paper and reference integrity\\ \hline
+Hardware & AMD Ryzen 7 6800U, 16 GB RAM & CPU-only training ($\sim$11 min)\\ \hline
+\end{tabular}
+\end{table}
+
+Table~\ref{tab:tools} lists the software and hardware actually used, with the reason for each choice, so that the environment can be reconstructed. Two entries carry practical significance beyond documentation: Streamlit is recorded as being launched through the Python interpreter rather than its executable, the workaround for the Device Guard restriction described in Section~2.2; and the training hardware is a consumer laptop CPU, which substantiates the claim that no specialised computing resources are required to reproduce this work.
+
+
+
+%========================== 3. PROJECT MANAGEMENT ============================
+\section{Project Management}
+
+\subsection{Scrum Adaptation}
+The project ran a deliberately adapted Scrum. Roles: the supervisor acted as
+product owner, setting and prioritising backlog items through the logged
+homework; the author served as the development team and scrum master. Events:
+the weekly supervision meeting combined sprint review (demonstrating the
+increment---dashboard, results, or paper sections) and sprint planning (the next
+homework). Artefacts: the supervision log is the product backlog
+(Table~\ref{tab:backlog}), the weekly deliverable is the increment, and the public
+repository is the always-releasable product. The honest caveat of solo Scrum is
+recorded: daily stand-ups and peer review do not apply, so their functions were
+substituted by commit discipline and supervisor feedback. The adaptation is reported honestly rather than dressed up as textbook Scrum, since acknowledging where a solo project departs from the framework is itself part of sound project-management practice.
+
+\subsection{Sprints}
+Nine sprints ran on the weekly cadence; each is summarised with its focus and
+outcome in Table~\ref{tab:sprint}. Two properties are worth noting: every sprint ended
+with a demonstrable artefact (never only reading or planning), and scope
+adjustments---such as bounding validation to one additional dataset---were made
+at sprint boundaries with the product owner, not mid-sprint.
+
+\begin{table}[htbp]
+\centering
+\caption{Sprint log following the weekly supervision cadence}
+\label{tab:sprint}
+\small
+\renewcommand{\arraystretch}{1.3}
+\begin{tabular}{|c|p{6.2cm}|p{6.6cm}|}
+\hline
+\textbf{Sprint} & \textbf{Focus} & \textbf{Outcome}\\ \hline
+1 & Topic, proposal, environment setup & Approved topic; venv $+$ repo initialised\\ \hline
+2 & Data pipeline $+$ EDA (UCI) & 34{,}589 clean hourly rows; pattern figures\\ \hline
+3 & LSTM development & V1/V2 trained; V1 selected; baselines beaten\\ \hline
+4 & Anomaly detection & IF vs Z-score agreement; 79 multivariate finds\\ \hline
+5 & Dashboard & Streamlit app working from precomputed results\\ \hline
+6 & Paper: Intro $\to$ Literature Review & IEEE draft with parameter table $+$ architecture\\ \hline
+7 & Paper: Methodology, Results, equations & All 43 verified references cited\\ \hline
+8 & Cross-dataset validation (Tetouan) & 62\%/87\% baseline improvements; subsection added\\ \hline
+9 & Deployment preparation & Firmware $+$ logger authored; site permission granted\\ \hline
+\end{tabular}
+\end{table}
+
+Table~\ref{tab:sprint} reconstructs the nine sprints from the supervision log. Two properties are visible in the outcome column: every sprint terminated in a demonstrable artefact rather than in reading or planning alone, and the ordering is MVP-first---pipeline and models before dashboard, dashboard before paper, and deployment last, where a delay cannot block the rest. The table therefore doubles as evidence of the incremental lifecycle claimed in Section~2.1.
+
+
+
+\subsection{Product Backlog}
+The backlog, reconstructed from the supervision log, is tabulated in
+Table~\ref{tab:backlog} with priority and current status. Its shape shows the MVP-first
+ordering: pipeline and models before dashboard, dashboard before paper polish,
+and deployment (the only \emph{in-progress} item) explicitly decoupled so it
+cannot block submission.
+
+\begin{table}[htbp]
+\centering
+\caption{Product backlog reconstructed from the supervision log}
+\label{tab:backlog}
+\small
+\renewcommand{\arraystretch}{1.3}
+\begin{tabular}{|c|p{7.4cm}|c|c|}
+\hline
+\textbf{ID} & \textbf{Backlog item} & \textbf{Priority} & \textbf{Status}\\ \hline
+B1 & Clean UCI dataset; leakage-free pipeline & Must & Done\\ \hline
+B2 & LSTM forecaster with naive/MA baselines & Must & Done\\ \hline
+B3 & Unsupervised anomaly detection $+$ agreement study & Must & Done\\ \hline
+B4 & Real-time dashboard (MVP) & Must & Done\\ \hline
+B5 & IEEE paper: all sections, verified references & Must & Done\\ \hline
+B6 & Equations $+$ algorithm in paper; detail here & Must & Done\\ \hline
+B7 & Cross-dataset validation (Tetouan) & Should & Done\\ \hline
+B8 & Supporting Material (this document) & Must & Done\\ \hline
+B9 & Restaurant deployment (sensor $+$ plug) & Should & In progress\\ \hline
+B10 & SHAP explainability; multivariate LSTM & Could & Backlog\\ \hline
+\end{tabular}
+\end{table}
+
+Table~\ref{tab:backlog} presents the backlog with MoSCoW priorities and current status. Eight of the ten items are complete; item~B9, the physical deployment, is deliberately marked \emph{in progress} because the hardware is on order and the site permission granted but the collection has not yet run; item~B10 remains in the backlog as declared future work. Recording the state honestly, rather than presenting a uniformly completed list, is what makes the backlog a genuine management artefact.
+
+
+
+\subsection{Hardware and Software Evaluation}
+Selections were made by comparison, not default. \emph{Sensing board}: the
+Arduino Nano 33 BLE Sense was chosen over an ESP32 development kit and a
+Raspberry Pi Zero. The ESP32 is cheaper and Wi-Fi-native but carries no onboard
+sensors, so total cost and assembly rise once temperature, humidity, pressure,
+light, and microphone modules are added; the Pi offers a full OS and SD storage
+but at several times the power draw and cost, defeating the low-power sensing
+brief. The Nano integrates the entire required sensor suite on one \pounds30
+board, has a TinyML path \cite{warden2019tinyml}, and a published industrial
+deployment precedent \cite{baskar2024edge}. \emph{Energy metering}: the TP-Link
+Tapo P110 was selected over a Shelly Plug S on availability and cost, with a
+supported local-network API (\texttt{python-kasa}) for scripted logging.
+\emph{Deep-learning framework}: TensorFlow/Keras over PyTorch for its concise
+high-level API at this project's scale and its TensorFlow~Lite route onto
+microcontrollers \cite{abadi2016tensorflow}. \emph{Dashboard framework}:
+Streamlit over Dash and Flask because a pure-Python, widget-complete framework
+with built-in caching delivered the MVP in days; the accepted trade-off is
+coarser layout control, immaterial here.
+
+\subsection{Risk Management}
+Risks were logged and mitigated as they arose rather than listed once and
+forgotten; the register (Table~\ref{tab:risk}) records likelihood, impact, and---where
+the risk materialised, as with the Device Guard block and the
+environment-mismatch incident---the outcome of the mitigation.
+
+\begin{table}[htbp]
+\centering
+\caption{Risk register (L = likelihood, I = impact)}
+\label{tab:risk}
+\small
+\renewcommand{\arraystretch}{1.3}
+\begin{tabular}{|p{5.4cm}|c|c|p{6.6cm}|}
+\hline
+\textbf{Risk} & \textbf{L} & \textbf{I} & \textbf{Mitigation / outcome}\\ \hline
+Fabricated or unverifiable references & M & H & Every source personally verified in Zotero before citation; unverifiable entries replaced\\ \hline
+Windows Device Guard blocks executables & H & M & Invoke as Python modules (\texttt{python -m streamlit} \dots); occurred and resolved\\ \hline
+Package installed outside venv & M & M & \texttt{\%pip install} inside notebooks; occurred and resolved\\ \hline
+Hardware delivery delay & M & M & Deployment decoupled from paper; benchmark results carry the evaluation\\ \hline
+Power-bank auto-shutoff during sensing & M & M & Trickle-charge mode or mains charger; desk test mandated before deployment\\ \hline
+Data loss during collection & L & H & Append-only logging, immediate CSV backup, GitHub push discipline\\ \hline
+Scope creep (extra datasets/models) & M & M & Depth-over-breadth rule: one cross-dataset validation, remainder future work\\ \hline
+\end{tabular}
+\end{table}
+
+Table~\ref{tab:risk} records the risks carried by the project with their likelihood and impact and, crucially, the outcome where a risk actually materialised. Three did: the Device Guard policy blocking executables, a package installed outside the virtual environment, and the early reference-integrity problem. Each is shown with the mitigation that resolved it, so the register functions as a record of managed events rather than a speculative list. The remaining entries---hardware delay, power-bank shutoff, data loss, and scope creep---are live risks with mitigations already in place, the most consequential being the deliberate decoupling of the hardware deployment from the submission.
+
+
+
+\subsection{Ethics and Safety Management}
+Ethics and safety were managed as process, not paperwork: the supervisor was
+informed ahead of the planned deployment; written site permission is held; the
+firmware computes a loudness number and discards audio by construction; and the
+physical rules are fixed in the deployment guide---no mains or wiring work of
+any kind, plug-through metering only with the appliance powered off, placement
+away from heat and water, and the device labelled with owner contact details.
+The governing professional, legal, social, and sustainability analysis follows
+in Section~4.
+
+%========================== 4. ETHICS ========================================
+\section{Professional, Ethical, Social and Sustainability Considerations}
+
+\subsection{Ethical Issues}
+The project involves no human participants, so no Category~Z approval applies.
+Both datasets are public and fully anonymised. The approved real-world
+deployment collects environmental numbers only---temperature, humidity,
+pressure, light, and a sound-pressure level computed on-device with the audio
+immediately discarded; no audio, video, or personal data is recorded, written
+permission has been obtained from the site's general manager, and the supervisor
+has been informed. On algorithmic transparency: both models are presently black
+boxes, a recognised trust barrier; SHAP-based explanation
+\cite{lundberg2017unified} is planned so operators can see why an hour was
+forecast high or flagged anomalous. A further ethical dimension is dataset bias:
+the training data describe a French household and a Moroccan city, not a UK
+industrial site, and any deployed use must therefore treat model outputs as
+decision support to be reviewed, not as autonomous judgements---a position
+reflected throughout the system's design. Treating transparency and bias as first-class design concerns, rather than compliance afterthoughts, is the professionally responsible stance for a system intended to inform operational decisions.
+
+\subsection{Legal Constraints}
+No personal data is processed, so GDPR obligations are satisfied by design
+rather than by exemption-seeking. The UCI household dataset
+\cite{hebrail2012individual} is used under its Creative Commons Attribution
+licence and the Tetouan dataset under the UCI repository terms, both permitting
+academic use with citation. The project's own code, processed data, and trained
+models are released under the MIT licence, and all libraries used are
+open-source.
+
+\subsection{Social Impact}
+The intended impact is distributive: bringing monitoring, forecasting, and
+fault-warning capabilities---currently affordable only to large
+operators---within reach of SMEs, which employ the majority of the industrial
+workforce. The system is designed to augment rather than replace facilities
+staff: it surfaces unusual consumption for a person to judge, and the
+explainability roadmap exists precisely so that judgement remains informed.
+Publishing the entire system openly also carries an educational impact: any
+student or small organisation can reproduce, audit, and extend it at no cost.
+
+\subsection{Sustainability Considerations}
+The computational footprint was kept deliberately small: the selected forecaster
+has 29{,}857 parameters and trained in about eleven minutes on a laptop
+CPU---no GPU cluster was used at any stage---and the detector is lightweight by
+construction. The target sensing hardware operates at milliwatt scale. Training
+emissions were not formally metered, an acknowledged gap; the honest claim is
+that the design minimises compute by choice, and planned quantisation for
+on-device inference would reduce the deployed footprint further. The system's
+purpose---surfacing energy waste---is itself the principal sustainability
+contribution.
+
+%========================== 5. CRITICAL APPRAISAL ============================
+\section{Critical Appraisal and Reflection}
+
+\subsection{What Worked Well}
+Three design decisions proved decisive. First, disciplined baselines: the
+LSTM's 8.6\% and 35.7\% MAE improvements over naive and moving-average
+predictors on UCI---widening to 62.0\% and 87.0\% on Tetouan---are meaningful
+precisely because the comparison was mandatory, not assumed. Second,
+re-applying the pipeline unchanged to a second dataset turned a limitation into
+a validation: identical code transferring across a single household and a
+city-scale load is direct evidence of generalisability. Third, the simpler LSTM
+variant beating the deeper one on held-out data vindicated selecting by
+generalisation rather than validation loss. Operationally, the
+precomputed-results dashboard made every demonstration reliable---nothing
+trains or downloads live, so supervision meetings and the eventual viva
+demonstration carry no risk of an on-the-spot failure. In combination these decisions turned methodological caution into demonstrable strength: every headline claim in this project is backed by a comparison, a second dataset, or a reproducible artefact.
+
+\subsection{Limitations}
+Forecasting metrics are reported over a bounded 500-hour test window. The
+anomaly evaluation is an agreement study against a statistical reference, not
+accuracy against true faults---no labels exist to permit more. Neither dataset
+is genuinely industrial: one household and one city bracket, but do not include,
+the SME factory floor. The forecaster is univariate, leaving the weather signals
+that the Tetouan analysis showed to matter unexploited. The sensing layer,
+though designed, desk-test-specified, and approved for deployment, has not yet
+run on physical hardware. Finally, the reported forecasting metrics derive from
+the 500-hour window used consistently across paper and dashboard; recomputation
+over the full multi-year test partition would strengthen the claim and is a
+straightforward extension.
+
+\subsection{Lessons Learned}
+The sharpest lesson concerned source integrity: early drafts contained
+references that could not be verified, and the discipline adopted in
+response---every citation personally confirmed in the reference library before
+use---proved essential to producing defensible academic work. Environment
+management on Windows taught its own lessons: packages installed outside the
+virtual environment silently vanish from notebooks, and a Device Guard policy
+that blocked executables was resolved by invoking tools as Python modules.
+Metrically, MAPE's collapse near zero-valued observations showed why metric
+choice must follow data characteristics. Above all, honest framing---agreement
+rather than accuracy, bounded windows stated as such---repeatedly turned
+potential examiner objections into demonstrations of rigour. A final
+research-skills lesson was the value of writing incrementally against
+supervision feedback: sections drafted immediately after each meeting required
+far less rework than material written speculatively in advance.
+
+\subsection{Future Work}
+The immediate step is executing the approved restaurant deployment---
+environmental sensing plus single-appliance energy metering---as a live proof of
+concept of the sensing layer. Beyond it: SHAP-based explanation for both models
+\cite{lundberg2017unified}; extending the forecaster to multivariate input using
+the meteorological interaction evidenced on Tetouan; operator feedback to
+convert anomaly agreement into confirmed detection; and model quantisation
+towards on-device inference in the TinyML manner \cite{warden2019tinyml}. With
+hindsight, the project's outcome matches its aim---capabilities previously
+confined to expensive proprietary systems were demonstrated on a \pounds30
+hardware target and open software---and the process, disciplined by weekly
+increments and honest evaluation, is one this author would repeat.
+
+\clearpage
+%========================== 6. EVIDENCE APPENDIX =============================
+\clearpage
+\appendix
+
+\noindent{\itshape Following supervision feedback, the evidence is presented where it belongs: the pseudocode appears beside the stages it implements, and the tables, equations, and figures beside the discussion they support. These appendices hold only what is genuinely supplementary.}
+
+\section{Test Scripts and Cases}
+\noindent\textbf{A.1 Test cases}\par\smallskip
+\begin{tabular}{|c|l|p{5.6cm}|p{3.4cm}|c|}
+\hline
+\textbf{ID} & \textbf{Aspect} & \textbf{Procedure} & \textbf{Expected} & \textbf{Status}\\ \hline
+T1 & Validity & Assert test timestamps all later than train; scaler statistics computed on train only & No temporal overlap; leakage channel closed & Pass\\ \hline
+T2 & Reproducibility & Re-run pipeline $+$ training with seed 42 & Metrics reproduce & Pass\\ \hline
+T3 & Functionality & Launch dashboard against saved results & All three sections render; metrics match Table~\ref{tab:uci} & Pass\\ \hline
+T4 & Linkage / errors & Rename a results file; relaunch & Named-file guidance shown; no stack trace & Pass\\ \hline
+T5 & Reliability & Stop logger mid-run; restart & CSV appends; no loss, no overwrite & Pass (design test)\\ \hline
+T6 & Hardware soak & Board on power bank $\geq$ 3 h before site placement & Continuous readings; no shutoff & Planned\\ \hline
+T7 & Sensor sanity & Breathe / cover / clap near board & Humidity, light, noise respond & Planned\\ \hline
+\end{tabular}
+
+Table~A.1 enumerates the tests run against the system and their outcomes. T1 and T2 protect the integrity of the evaluation itself---no temporal leakage and reproducible metrics---while T3 and T4 exercise the dashboard's normal and failure paths, the latter confirming the guarded behaviour depicted in Figure~\ref{fig:sequence}. T5 verifies that the logger appends rather than overwrites, the property that makes an interrupted collection recoverable. T6 and T7 are marked \emph{planned} because they require the physical board, which is on order; listing them now fixes the acceptance criteria before the hardware arrives rather than after.
+
+\bigskip
+
+
+\noindent\textbf{A.2 Executable verification script} (leakage and
+reproducibility checks, runnable with \texttt{pytest} or directly):\par
+\begin{verbatim}
+import pandas as pd, numpy as np
+
+def test_chronological_split():
+    df = pd.read_csv("data/clean_hourly_power.csv",
+                     parse_dates=["datetime"], index_col="datetime")
+    n = len(df); tr, va = int(n*.70), int(n*.85)
+    assert df.index[:tr].max() < df.index[tr:va].min()
+    assert df.index[tr:va].max() < df.index[va:].min()
+
+def test_scaler_fit_on_train_only():
+    df = pd.read_csv("data/clean_hourly_power.csv",
+                     parse_dates=["datetime"], index_col="datetime")
+    n = len(df); tr = int(n*.70)
+    lo, hi = df.iloc[:tr].min(), df.iloc[:tr].max()
+    scaled = (df - lo) / (hi - lo)          # train-derived bounds
+    s = scaled.iloc[:tr]
+    assert np.isclose(s.min().min(), 0) and np.isclose(s.max().max(), 1)
+
+def test_results_consistency():
+    p = pd.read_csv("results/predictions.csv")
+    mae = np.mean(np.abs(p["Actual_kW"] - p["LSTM_Predicted_kW"]))
+    assert abs(mae - 0.3707) < 1e-3         # matches reported MAE
+\end{verbatim}
+
+\section{Multimedia Links}
+\begin{itemize}
+\item GitHub repository (code, data, models, results):
+      \url{https://github.com/S1122A/SmartGrid-Dissertation}
+\item Dashboard (local): \texttt{python -m streamlit run dashboard/app.py}
+      from the project root
+\end{itemize}
+
+\clearpage
+\nocite{*}
+\bibliographystyle{IEEEtran}
+\bibliography{References}
+
+\end{document}
