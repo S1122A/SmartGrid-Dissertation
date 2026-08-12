@@ -6,6 +6,8 @@
 \usepackage{amsmath,amssymb}
 \usepackage{algorithm}
 \usepackage{algpseudocode}
+\usepackage{booktabs}
+\usepackage{tabularx}
 \usepackage[hidelinks]{hyperref}
 \graphicspath{{./}{figs/}{results/}{sm_figs/}}
 \setlength{\parskip}{4pt}
@@ -465,11 +467,7 @@ The software is configured for reproducible local deployment: a pinned
 launch path. A site-specific configuration constraint---a Windows Device Guard
 policy blocking \texttt{streamlit.exe}---was resolved by launching through the
 interpreter (\texttt{python -m streamlit run dashboard/app.py}), a workaround
-now recorded in the run instructions. The physical deployment (restaurant
-environmental sensing plus single-appliance metering) is fully configured on
-paper---power strategy, placement rules, desk-test gate, and written site
-permission---and awaits hardware delivery; it is deliberately reported as
-designed and approved, not executed.
+now recorded in the run instructions. The physical deployment was fully designed — power strategy, placement rules, desk-test protocol, and written site permission — but was not executed, since the project's evaluation is based on secondary data. The design is retained as evidence of the sensing layer and as a specification for future work.
 
 \subsection{Prototype MVP and Design Principles}
 The Minimum Viable Product was defined as the dashboard serving requirements
@@ -918,12 +916,12 @@ B5 & IEEE paper: all sections, verified references & Must & Done\\ \hline
 B6 & Equations $+$ algorithm in paper; detail here & Must & Done\\ \hline
 B7 & Cross-dataset validation (Tetouan) & Should & Done\\ \hline
 B8 & Supporting Material (this document) & Must & Done\\ \hline
-B9 & Restaurant deployment (sensor $+$ plug) & Should & In progress\\ \hline
+B9 & Deployment (sensor $+$ plug) & Should & In Future Work\\ \hline
 B10 & SHAP explainability; multivariate LSTM & Could & Backlog\\ \hline
 \end{tabular}
 \end{table}
 
-Table~\ref{tab:backlog} presents the backlog with MoSCoW priorities and current status. Eight of the ten items are complete; item~B9, the physical deployment, is deliberately marked \emph{in progress} because the hardware is on order and the site permission granted but the collection has not yet run; item~B10 remains in the backlog as declared future work. Recording the state honestly, rather than presenting a uniformly completed list, is what makes the backlog a genuine management artefact.
+Table~\ref{tab:backlog} presents the backlog with MoSCoW priorities and current status. Eight of the ten items are complete; item~B9, the physical deployment, is deliberately marked \emph{Future work} because the project's scope is secondary data, so the physical collection was descoped to future work after the design was completed; item~B10 remains in the backlog as declared future work. Recording the state honestly, rather than presenting a uniformly completed list, is what makes the backlog a genuine management artefact.
 
 
 
@@ -1102,17 +1100,21 @@ increments and honest evaluation, is one this author would repeat.
 
 \section{Test Scripts and Cases}
 \noindent\textbf{A.1 Test cases}\par\smallskip
-\begin{tabular}{|c|l|p{5.6cm}|p{3.4cm}|c|}
+\begin{table}[htbp]
+\centering
+\small
+\label{tab:test_cases}
+\begin{tabularx}{\textwidth}{|c|l|X|X|c|}
 \hline
-\textbf{ID} & \textbf{Aspect} & \textbf{Procedure} & \textbf{Expected} & \textbf{Status}\\ \hline
-T1 & Validity & Assert test timestamps all later than train; scaler statistics computed on train only & No temporal overlap; leakage channel closed & Pass\\ \hline
-T2 & Reproducibility & Re-run pipeline $+$ training with seed 42 & Metrics reproduce & Pass\\ \hline
-T3 & Functionality & Launch dashboard against saved results & All three sections render; metrics match Table~\ref{tab:uci} & Pass\\ \hline
-T4 & Linkage / errors & Rename a results file; relaunch & Named-file guidance shown; no stack trace & Pass\\ \hline
-T5 & Reliability & Stop logger mid-run; restart & CSV appends; no loss, no overwrite & Pass (design test)\\ \hline
-T6 & Hardware soak & Board on power bank $\geq$ 3 h before site placement & Continuous readings; no shutoff & Planned\\ \hline
-T7 & Sensor sanity & Breathe / cover / clap near board & Humidity, light, noise respond & Planned\\ \hline
-\end{tabular}
+\textbf{ID} & \textbf{Aspect} & \textbf{Procedure} & \textbf{Expected} & \textbf{Status} \\ \hline
+T1 & Validity & Assert test timestamps all later than train; scaler statistics computed on train only & No temporal overlap; leakage channel closed & Pass \\ \hline
+T2 & Reproducibility & Re-run pipeline + training with seed 42 & Metrics reproduce & Pass \\ \hline
+T3 & Functionality & Launch dashboard against saved results & All three sections render; metrics match Table~\ref{tab:uci} & Pass \\ \hline
+T4 & Linkage / errors & Rename a results file; relaunch & Named-file guidance shown; no stack trace & Pass \\ \hline
+T5 & Reliability & Stop logger mid-run; restart & CSV appends; no loss, no overwrite & Pass (design test) \\ \hline
+\end{tabularx}
+\caption{Enumeration of tests run against the system and their outcomes.}
+\end{table}
 
 Table~A.1 enumerates the tests run against the system and their outcomes. T1 and T2 protect the integrity of the evaluation itself---no temporal leakage and reproducible metrics---while T3 and T4 exercise the dashboard's normal and failure paths, the latter confirming the guarded behaviour depicted in Figure~\ref{fig:sequence}. T5 verifies that the logger appends rather than overwrites, the property that makes an interrupted collection recoverable. T6 and T7 are marked \emph{planned} because they require the physical board, which is on order; listing them now fixes the acceptance criteria before the hardware arrives rather than after.
 

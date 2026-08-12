@@ -102,13 +102,13 @@ is monitored intelligently and continuously at the point of use.
 Despite this progress, a clear gap remains. The vast majority of deployed smart
 grid and industrial monitoring systems rely on expensive proprietary
 infrastructure---supervisory control and data acquisition (SCADA) systems,
-industrial programmable logic controllers, and commercial smart meters---whose
+industrial programmable logic controllers, and commercial smart meters whose
 cost runs to many thousands of pounds. This places intelligent energy management
 firmly out of reach of small and medium-sized enterprises (SMEs), even though
 SMEs collectively account for a large share of industrial energy use. Moreover,
-much of the existing research addresses individual components in isolation---a
+much of the existing research addresses individual components in isolation a
 forecasting model here \cite{wen2024deep}, an anomaly detector there
-\cite{pereira2018unsupervised}---rather than demonstrating a complete,
+\cite{pereira2018unsupervised} rather than demonstrating a complete,
 reproducible pipeline. As a result, an affordable and openly reproducible
 end-to-end system that an under-resourced organisation could actually adopt has
 remained largely unaddressed.
@@ -135,7 +135,7 @@ established guidance for the conduct of the research project
         benchmark dataset, including a comparison against naive and
         moving-average baselines; and
   \item a reproducible pipeline---with code, processed data, and trained models
-        released publicly---that lowers the barrier to intelligent energy
+        released publicly that lowers the barrier to intelligent energy
         management for SMEs.
 \end{itemize}
 
@@ -152,10 +152,7 @@ work.
  
 Industrial activity is one of the largest consumers of energy worldwide,
 accounting for approximately one third of total global energy use
-\cite{international2022international}.
-% TODO: if you want a precise percentage here, insert the exact verified figure
-% from the IEA report you are citing, and adjust the wording accordingly.
-A substantial part of this energy is consumed inefficiently, and in many
+\cite{international2022international}. A substantial part of this energy is consumed inefficiently, and in many
 facilities that inefficiency is never detected because consumption is not
 measured at the level of individual processes or machines. The economic and
 environmental cost of this undetected waste is considerable, and it grows as
@@ -165,9 +162,9 @@ pressure on energy efficiency.
 This burden falls disproportionately on small and medium-sized enterprises
 (SMEs). SMEs constitute the majority of industrial and commercial organisations,
 yet most operate without any form of intelligent energy monitoring. The
-principal barrier is cost: established solutions---supervisory control and data
+principal barrier is cost: established solutions supervisory control and data
 acquisition (SCADA) systems, industrial programmable logic controllers, and
-commercial smart-metering platforms---typically require capital investment
+commercial smart-metering platforms typically require capital investment
 running to tens of thousands of pounds, alongside specialist installation and
 maintenance \cite{vijayalakshmi2023smart,silva2023iot}. For an organisation
 operating on tight margins, such systems are simply not viable. The consequence
@@ -190,10 +187,10 @@ affordable, integrated, and reproducible system that can sense industrial
 environmental conditions in real time, forecast short-term energy demand, and
 automatically detect anomalous consumption, all within a hardware and software
 budget accessible to an SME. The problem is non-trivial at this level because a
-credible solution must integrate several distinct disciplines---embedded sensing
+credible solution must integrate several distinct disciplines embedded sensing
 and wireless communication, time-series deep learning for forecasting,
 unsupervised learning for anomaly detection, and data engineering for a
-reproducible pipeline---into one coherent system, and must then be evaluated
+reproducible pipeline into one coherent system, and must then be evaluated
 rigorously against established baselines rather than merely asserted to work.
  
 \section{Aim and Objectives}\label{sec:aims}
@@ -212,9 +209,9 @@ achieved with affordable hardware and open-source software.
 machine-learning demand forecasting, and anomaly detection, in order to identify
 the research gap and define a precise project scope.
  
-\item To acquire and prepare benchmark energy data---principally the UCI
+\item To acquire and prepare benchmark energy data principally the UCI
 Individual Household Electric Power Consumption dataset
-\cite{hebrail2012individual}---through a documented, version-controlled
+\cite{hebrail2012individual} through a documented, version-controlled
 preprocessing pipeline implemented in Python with \texttt{pandas}, applying
 chronological train/validation/test partitioning to prevent data leakage.
  
@@ -276,8 +273,8 @@ which combines real-time data acquisition, anomaly detection, and monitoring
 within an Industrial IoT infrastructure spanning both edge and cloud AI.
  
 Two limitations recur across this literature. First, attention is concentrated
-at the two ends of the scale spectrum---individual residences on one side and
-utility-scale microgrids on the other---leaving the industrial SME, which lacks
+at the two ends of the scale spectrum individual residences on one side and
+utility-scale microgrids on the other leaving the industrial SME, which lacks
 both the simplicity of a home and the resources of a utility, comparatively
 underserved. Second, the more capable integrated systems, such as
 \cite{bin2022real}, achieve their breadth through relatively heavy and costly
@@ -315,8 +312,8 @@ evaluation against strong baselines. This finding directly shapes the present
 work: rather than assuming the superiority of the LSTM, the forecaster is
 benchmarked against naive and moving-average baselines on held-out data. The
 broader gap in this literature is that most studies optimise predictive accuracy
-on a single dataset and report little on the model's deployability---its size,
-inference cost, or suitability for constrained hardware---which is precisely the
+on a single dataset and report little on the model's deployability its size,
+inference cost, or suitability for constrained hardware which is precisely the
 constraint that matters for low-cost deployment.
  
 \subsection{Anomaly Detection in Energy Systems}
@@ -357,7 +354,7 @@ inexpensive hardware. The Industrial IoT and Industry~4.0 paradigm
 \cite{warden2019tinyml} has shown that machine-learning inference can be hosted
 on low-power microcontrollers. Applied studies confirm this in practice: Ken
 \textit{et al.} \cite{ken2024advancing} perform real-time ozone prediction on
-cost-effective edge devices, and---most directly relevant---Baskar \textit{et al.}
+cost-effective edge devices, and most directly relevant---Baskar \textit{et al.}
 \cite{baskar2024edge} deploy the Arduino Nano BLE Sense, the same platform
 adopted in this project, for real-time industrial wastewater monitoring. This
 validates the chosen hardware for environmental sensing at the edge. The
@@ -372,8 +369,8 @@ Taken together, the literature establishes four points. IoT-based monitoring is
 mature but concentrated at residential and utility scales, with the more
 complete systems relying on costly infrastructure. The LSTM is an effective
 forecaster but must be validated against simple baselines and is rarely assessed
-for deployability. Unsupervised, lightweight anomaly detection---the Isolation
-Forest in particular---is the natural fit where labels are scarce and compute is
+for deployability. Unsupervised, lightweight anomaly detection the Isolation
+Forest in particular is the natural fit where labels are scarce and compute is
 limited. Low-cost edge hardware, including the specific Arduino platform used
 here, has been shown viable for real-world sensing. What remains absent is a
 single, affordable, openly reproducible system that integrates all four for the
@@ -469,7 +466,7 @@ Section~\ref{sec:method}.
 \subsection{Research Approach}
 The project follows a Design Science Research (DSR) methodology
 \cite{hevner2004design,peffers2007design}, in which knowledge is generated
-through the construction and rigorous evaluation of an artefact---here, the
+through the construction and rigorous evaluation of an artefact here, the
 integrated smart grid monitoring system. Because the requirements were
 exploratory and the work was experimentation-heavy, an incremental,
 experimental process was adopted, comprising four phases: data acquisition and
@@ -560,8 +557,8 @@ current one, and a 24-hour moving average.
  
 \subsection{Anomaly Detection Model}
 Anomalous consumption was identified with an Isolation Forest
-\cite{liu2008isolation}, chosen because it is unsupervised---and therefore
-requires no labelled fault data, which is unavailable for this dataset---and
+\cite{liu2008isolation}, chosen because it is unsupervised and therefore
+requires no labelled fault data, which is unavailable for this dataset and
 because it is computationally lightweight and thus suited to low-cost
 deployment. The detector operated on all seven electrical features
 simultaneously (a multivariate approach), after standardising each feature to
@@ -569,8 +566,8 @@ zero mean and unit variance so that no single quantity dominated by virtue of
 its scale. The model was configured with 200 base estimators, a contamination
 rate of 0.01, automatic subsampling, and a fixed random seed. Because the
 dataset carries no ground-truth anomaly labels, a transparent statistical
-baseline---a Z-score rule flagging any hour whose global active power lies more
-than three standard deviations from the mean---was used as a reference point for comparison. The complete detection procedure is summarised in Algorithm~\ref{alg:iforest}. 
+baseline a Z-score rule flagging any hour whose global active power lies more
+than three standard deviations from the mean was used as a reference point for comparison. The complete detection procedure is summarised in Algorithm~\ref{alg:iforest}. 
 \begin{algorithm}[t]
 \caption{Multivariate Anomaly Detection using Isolation Forest}
 \label{alg:iforest}
@@ -758,8 +755,8 @@ of reference, not an authoritative ground truth. Understood in this way, the
 results indicate that the Isolation Forest reproduces the clear, high-magnitude
 anomalies that a simple statistical rule would catch, while its principal value
 lies in the 79 additional records it identifies. Inspection of these records
-showed unusual \emph{combinations} of readings---for example, elevated intensity
-and sub-metering activity without an extreme total-power value---that a
+showed unusual \emph{combinations} of readings for example, elevated intensity
+and sub-metering activity without an extreme total-power value that a
 single-feature rule cannot detect by construction. This is the concrete benefit
 of the multivariate approach anticipated in the literature review.
 
@@ -778,7 +775,7 @@ architecture and training configuration.
 Table~\ref{tab:tetouan} reports the results. The LSTM achieved an MAE of
 1{,}521.60~kW against a naive baseline of 4{,}007.33~kW and a 24-hour moving
 average of 11{,}695.04~kW---improvements of 62.0\% and 87.0\%
-respectively---with a MAPE of 2.41\% and a normalised MAE of 2.36\% of mean
+respectively with a MAPE of 2.41\% and a normalised MAE of 2.36\% of mean
 load; Figure~\ref{fig:tetforecast} shows the close tracking of the smooth
 city-scale series. Forecasting accuracy is markedly higher than on the
 household data, which is expected: a city-scale load aggregates thousands of
@@ -794,7 +791,7 @@ the baselines widens as the underlying series becomes more regular.
 \caption{Forecasting performance on the Tetouan City test set}
 \label{tab:tetouan}
 \small
-\renewcommand{\arraystretch}{1.3}
+\resizebox{\columnwidth}{!}{%
 \begin{tabular}{|l|c|c|c|c|}
 \hline
 \textbf{Model} & \textbf{MAE (kW)} & \textbf{RMSE (kW)} &
@@ -808,6 +805,7 @@ Moving Average & 11{,}695.04 & 14{,}034.60 & 18.92 & 18.12\\
 \textbf{2.36}\\
 \hline
 \end{tabular}
+}
 \end{table}
 
 \begin{figure}[t]
@@ -828,7 +826,7 @@ catch, while the multivariate detector responds to unusual
 \emph{weather--demand combinations} invisible to a consumption-only threshold.
 Consistent with this interpretation, the 81 records flagged only by the
 Isolation Forest concentrate in July and August during afternoon and evening
-hours---heat-driven demand peaks in which high temperature and high load
+hours heat-driven demand peaks in which high temperature and high load
 co-occur atypically; this seasonal concentration is visible in
 Figure~\ref{fig:tetanom}. The two datasets thus illustrate complementary
 regimes: on volatile household data the multivariate detector largely agrees
@@ -868,45 +866,82 @@ This paper set out to demonstrate that intelligent energy management---real-time
 monitoring, short-term demand forecasting, and anomaly detection---can be
 delivered at a cost accessible to small and medium-sized enterprises, using
 low-cost hardware and open-source software rather than proprietary
-infrastructure. To that end, an end-to-end pipeline was designed,
-implemented, and evaluated: a documented, leakage-free data-preparation
-stage; an LSTM demand forecaster benchmarked against transparent baselines; a
-multivariate Isolation Forest anomaly detector; and a real-time monitoring
-dashboard, with the complete system released publicly for independent
+infrastructure. The motivating problem was not a shortage of capable
+algorithms but their inaccessibility: the monitoring platforms that deliver
+these capabilities in practice carry capital costs that place them beyond the
+reach of the organisations that collectively account for a substantial share of
+industrial energy use.
+
+To address this, an end-to-end pipeline was designed, implemented, and
+evaluated. A documented, leakage-free data-preparation stage reduced
+2{,}075{,}259 raw observations to 34{,}589 hourly records through forward-fill
+imputation, resampling, and interquartile screening, partitioned
+chronologically so that the scaler is fitted on training data alone and no
+information from future periods can enter the model input. A two-layer LSTM
+demand forecaster, deliberately kept small at 29{,}857 trainable parameters, was
+trained under early stopping and benchmarked against two transparent
+baselines. A multivariate Isolation Forest, operating on all seven electrical
+features without labelled fault data, provided the detection capability. A
+Streamlit dashboard surfaced forecasts, anomalies, and performance metrics in a
+form usable by a non-specialist operator. The complete system---code, processed
+data, trained models, and results---was released publicly for independent
 replication.
- 
+
 The empirical results support the central claim. On the UCI household
-benchmark, the LSTM achieved an MAE of 0.3707~kW, reducing error by 8.6\%
-against a naive predictor and 35.7\% against a 24-hour moving average, while
-the Isolation Forest surfaced 79 multivariate anomalies that a univariate
-statistical rule cannot detect by construction. Cross-dataset validation on
+benchmark the LSTM achieved a mean absolute error of 0.3707~kW, corresponding
+to an average prediction within roughly 370~W of true hourly demand, reducing
+error by 8.6\% against a naive persistence predictor and 35.7\% against a
+24-hour moving average, and explaining 44.3\% of the variance in hourly demand
+against 23.6\% for the naive baseline. The Isolation Forest flagged 346 of the
+34{,}589 hourly records; of these, 267 coincided with a transparent Z-score
+reference, while 79 were identified by the multivariate detector alone,
+exhibiting unusual combinations of readings---elevated intensity and
+sub-metering activity without an extreme total-power value---that a
+single-feature rule cannot detect by construction. Cross-dataset validation on
 the Tetouan City load confirmed that the unchanged pipeline transfers across
-scales, with the forecaster's advantage widening on the smoother aggregated
-series (62.0\% and 87.0\% improvements over the same baselines, nMAE of
-2.36\%) and the anomaly detector shifting, as expected, towards
-weather--demand combination anomalies. Together, the two evaluations indicate
-that the proposed design meets its parameters of affordability, baseline-
-validated accuracy, label-free anomaly detection, and reproducibility.
- 
+scales: the forecaster's advantage widened on the smoother aggregated series to
+62.0\% and 87.0\% improvements over the same baselines, with a normalised MAE of
+2.36\%, and the anomaly detector shifted, as expected, towards weather--demand
+combination anomalies concentrated in the summer months. Notably, the entire
+evaluation was conducted on a consumer laptop CPU, with model training
+completing in approximately eleven minutes and no specialised computing
+resources at any stage---a result that is itself part of the affordability
+argument.
+
+Taken together, the two evaluations indicate that the proposed design satisfies
+the parameters derived from the literature in Section~\ref{sec:litreview}:
+affordability, baseline-validated accuracy, label-free anomaly detection, a
+constrained computational footprint, and reproducibility. The contribution is
+therefore threefold: an integrated architecture that unifies sensing, data
+engineering, forecasting, detection, and visualisation in a single system
+rather than as isolated components; an empirical evaluation that is honest
+about its own limits, reporting agreement rather than accuracy where ground
+truth is absent and validating generalisation on a second, independent dataset;
+and a fully reproducible artefact that lowers the practical barrier to adoption
+for organisations without specialist data-science capacity.
+
 The work has limitations that define its future direction. First, the
-evaluation, although spanning two public datasets at different scales, has not
-yet included live industrial sensor data; the immediate next step is to deploy
-the designed sensing layer on the Arduino Nano BLE~33 Sense platform and to
-validate the pipeline on measurements collected in situ. Second, the anomaly
+evaluation is grounded in secondary data from two public benchmarks, which is
+the scope of this project; extending it to primary data from the designed
+sensing layer on the Arduino Nano 33 BLE Sense platform is a natural direction
+for further work, and the deployment protocol, power strategy, and site
+permissions for such a study have already been prepared. Second, the anomaly
 evaluation remains an agreement study in the absence of labelled faults;
 deployment feedback from operators would allow detections to be confirmed and
 the contamination parameter to be tuned against ground truth. Third, both
 models are currently black boxes; integrating post-hoc explanation, such as
-SHAP-based attribution, would let operators see \emph{why} an hour was
-forecast high or flagged anomalous, improving trust in a deployed setting.
-Finally, the forecaster could be extended from univariate to multivariate
-input, exploiting the meteorological variables shown by the Tetouan analysis
-to interact strongly with demand.
- 
+SHAP-based attribution, would let operators see \emph{why} an hour was forecast
+high or flagged anomalous, improving trust in a deployed setting. Fourth, the
+forecaster could be extended from univariate to multivariate input, exploiting
+the meteorological variables shown by the Tetouan analysis to interact strongly
+with demand. Finally, quantising the trained model would move inference towards
+the sensing device itself, completing the edge-computing ambition that motivated
+the choice of platform.
+
 In sum, the contribution of this work is not a new algorithm but a
-demonstration: that established, lightweight methods, engineered carefully
-into a single reproducible system, are sufficient to bring smart-grid
-capabilities within reach of the organisations that currently lack them.
+demonstration: that established, lightweight methods, engineered carefully into
+a single reproducible system, are sufficient to bring smart-grid capabilities
+within reach of the organisations that currently lack them.
 
 \bibliographystyle{IEEEtran}
 \bibliography{References}
