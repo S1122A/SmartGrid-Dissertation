@@ -6,7 +6,6 @@
 \usepackage{textcomp}
 \usepackage{url}
 \usepackage{caption}
-\usepackage{amsmath,amssymb}
 
 \begin{document}
 
@@ -33,12 +32,11 @@ short-term demand forecasting, and an Isolation Forest model for unsupervised
 anomaly detection, all surfaced through a real-time dashboard. Using the UCI
 Individual Household Electric Power Consumption dataset, the LSTM forecaster
 achieved a mean absolute error (MAE) of 0.3707~kW, outperforming a naive
-baseline by 8.8\% and a 24-hour moving-average baseline by 34.9\% on unseen
+baseline by 8.6\% and a 24-hour moving-average baseline by 35.7\% on unseen
 test data. Cross-dataset validation on the Tetouan City load confirmed that the unchanged
 pipeline transfers across scales, improving on the same baselines by 62.0\% and
 87.0\%. The contribution is an affordable, open-source, end-to-end pipeline
-that lowers the barrier to intelligent energy management for resource-
-constrained organisations.
+that lowers the barrier to intelligent energy management for resource constrained organisations.
 \end{abstract}
 
 \begin{IEEEkeywords}
@@ -98,8 +96,7 @@ industrial programmable logic controllers, and commercial smart meters whose
 cost runs to many thousands of pounds. This places intelligent energy management
 firmly out of reach of small and medium-sized enterprises (SMEs), even though
 SMEs collectively account for a large share of industrial energy use. Moreover,
-much of the existing research addresses individual components in isolation a
-forecasting model here \cite{wen2024deep}, an anomaly detector there
+much of the existing research addresses individual components in isolation---a forecasting model here \cite{wen2024deep}, an anomaly detector there
 \cite{pereira2018unsupervised} rather than demonstrating a complete,
 reproducible pipeline. As a result, an affordable and openly reproducible
 end-to-end system that an under-resourced organisation could actually adopt has
@@ -161,8 +158,8 @@ demand.
 Where monitoring exists it is frequently reactive. Threshold-based alarms
 register a problem only after a value has crossed a fixed limit and are poorly
 suited to the gradual drift or context-dependent anomalies that precede failure
-\cite{himeur2021artificial}. Advances in IoT sensing and machine-learning
-forecasting indicate that a proactive approach is achievable, but have largely
+\cite{himeur2021artificial}. Advances in IoT sensing \cite{alaa2017review,hafeez2020efficient} and
+machine-learning forecasting \cite{kong2017short,raza2015review} indicate that a proactive approach is achievable, but have largely
 been demonstrated as isolated components rather than a deployable system.
  
 The core problem is therefore the absence of an affordable, integrated, and reproducible system that can sense conditions in real time, forecast short-term demand, and detect anomalous consumption within a budget accessible to an SME;
@@ -188,15 +185,14 @@ affordable hardware and open-source software.
 machine-learning demand forecasting, and anomaly detection, in order to identify
 the research gap and define a precise project scope.
  
-\item To acquire and prepare benchmark energy data principally the UCI
-Individual Household Electric Power Consumption dataset
-\cite{hebrail2012individual} through a documented, version-controlled
-preprocessing pipeline implemented in Python with \texttt{pandas}, applying
-chronological train/validation/test partitioning to prevent data leakage.
+\item To prepare benchmark energy data---principally the UCI Individual
+Household Electric Power Consumption dataset \cite{hebrail2012individual}---
+through a documented, version-controlled pipeline applying chronological
+partitioning to prevent data leakage.
  
-\item To design the IoT sensing architecture around a low-cost embedded platform, using Bluetooth Low
-Energy and Wi-Fi telemetry to stream environmental measurements to a time-series
-datastore \cite{munirathinam2020industry,warden2019tinyml}.
+\item To design the IoT sensing architecture around a low-cost embedded
+platform using Bluetooth Low Energy and Wi-Fi telemetry
+\cite{munirathinam2020industry,warden2019tinyml}.
  
 \item To develop and train a Long Short-Term Memory (LSTM) network
 \cite{hochreiter1997long} for short-term energy demand forecasting using
@@ -207,15 +203,9 @@ and moving-average baselines \cite{makridakis2018statistical}.
 \cite{liu2008isolation} that flags abnormal consumption patterns without
 requiring labelled fault data.
 
-\item To build a real-time monitoring dashboard using Streamlit that visualises
-live readings, forecasted demand, and anomaly alerts in a form usable by a
-non-specialist operator.
- 
-\item To evaluate all models rigorously on held-out test data using appropriate
-quantitative metrics---mean absolute error (MAE), root-mean-square error (RMSE),
-and mean absolute percentage error (MAPE) for forecasting, and precision,
-recall, and F1-score for anomaly detection.
- 
+\item To build a real-time monitoring dashboard usable by a non-specialist
+operator, and to evaluate all models on held-out test data using MAE, RMSE,
+MAPE, and $R^2$ for forecasting and precision, recall, and F1 for detection.
  
 \end{enumerate}
 
@@ -265,8 +255,8 @@ constrained hardware.
 Himeur \textit{et al.} \cite{himeur2021artificial} review AI-based anomaly
 detection in buildings and identify label scarcity as the field's central
 tension, dividing the literature into two camps. Supervised approaches---
-XGBoost with LSTM \cite{chen2024effective}, comparative classifier studies, and network-level detection \cite{sahu2020machine}---
-can be highly accurate but presuppose labelled examples of the very faults they
+XGBoost with LSTM \cite{chen2024effective} and network-level detection \cite{sahu2020machine}---
+can be highly accurate but presuppose labeled examples of the very faults they
 aim to catch. Unsupervised methods avoid that dependency: the Isolation Forest
 \cite{liu2008isolation} isolates anomalies efficiently, clustering has been
 applied to energy series \cite{jesmeen2021unsupervised}, and variational
@@ -278,7 +268,7 @@ confirming the Isolation Forest belongs at the lightweight end of the spectrum.
  
 \subsection{Low-Cost Embedded and Edge Computing}
 TinyML \cite{warden2019tinyml} established that machine-learning inference can
-run on low-power microcontrollers, and Applied studies confirm this:
+run on low-power microcontrollers, and applied studies confirm this:
 most directly relevant, Baskar \textit{et al.} \cite{baskar2024edge} deploy the Arduino Nano 33 BLE Sense, the platform
 adopted here, for industrial wastewater monitoring. The remaining gap is
 integrative: edge-ML studies typically address a single task and rarely combine
@@ -320,7 +310,7 @@ design deliberately trades infrastructural sophistication for affordability and 
 \subsection{Research Approach}
 The project follows a Design Science Research (DSR) methodology
 \cite{hevner2004design,peffers2007design}, in which knowledge is generated
-through the construction and rigorous evaluation of an artefact here, the
+through the construction and rigorous evaluation of an artefact---here, the
 integrated smart grid monitoring system. Because the requirements were
 exploratory and the work was intense in research, an incremental 
 and research process was adopted, comprising four phases: data acquisition and
