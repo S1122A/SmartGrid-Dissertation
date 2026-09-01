@@ -664,7 +664,15 @@ not accuracy against true anomalies.
 
 
 \subsection{Testing and Validation Strategy}
-The runtime behaviour these tests exercise is depicted by the activity diagram of Figure~\ref{fig:activity} (an hourly record becoming an operator alert) and the sequence diagram of Figure~\ref{fig:sequence} (a dashboard session, including the guarded missing-file path). Five levels were applied.
+The runtime behaviour these tests exercise is depicted by the activity diagram of Figure~\ref{fig:activity} (an hourly record becoming an operator alert) and the sequence diagram of Figure~\ref{fig:sequence} (a dashboard session, including the guarded missing-file path).Testing addressed two distinct questions. \emph{Verification} asks whether the
+system was built correctly---whether each component behaves as specified---and
+was addressed by the functional and reliability levels below, which check the
+pipeline, dashboard, and logger against their stated requirements (F1--F5,
+Section~2.2). \emph{Validation} asks whether the correct system was built---
+whether it meets the underlying need---and was addressed by the data-validity,
+reproducibility, and model-validity levels, which establish that the evaluation
+protocol is sound and that the models genuinely outperform transparent
+baselines on unseen data. Five levels were applied across the two. Five levels were applied.
 \begin{figure}[htbp]\centering
 \includegraphics[width=.62\linewidth]{images/B15_activity_diagram.png}
 \caption{\small\itshape Activity diagram (behaviour): the path from an ingested hourly record through forecasting and scoring to a normal or anomalous outcome shown on the dashboard.}
@@ -1050,17 +1058,46 @@ trains or downloads live, so supervision meetings and the eventual viva
 demonstration carry no risk of an on-the-spot failure. In combination these decisions turned methodological caution into demonstrable strength: every headline claim in this project is backed by a comparison, a second dataset, or a reproducible artefact.
 
 \subsection{Limitations}
-Forecasting metrics are reported over a bounded 500-hour test window. The
-anomaly evaluation is an agreement study against a statistical reference, not
-accuracy against true faults---no labels exist to permit more. Neither dataset
-is genuinely industrial: one household and one city bracket, but do not include,
-the SME factory floor. The forecaster is univariate, leaving the weather signals
-that the Tetouan analysis showed to matter unexploited. The sensing layer,
-though designed, desk-test-specified, and approved for deployment, has not yet
-run on physical hardware. Finally, the reported forecasting metrics derive from
-the 500-hour window used consistently across paper and dashboard; recomputation
-over the full multi-year test partition would strengthen the claim and is a
-straightforward extension.
+The weaknesses of this study are not equal in consequence, and it is worth
+ranking them. The most consequential is that neither dataset is industrial: a
+French household and a Moroccan city bracket the SME factory floor without
+including it, so every performance figure is an indication of transferability
+rather than a measurement of it. This limitation conditions all the others,
+because it bounds what the results can be claimed to establish.
+
+Second in weight is the anomaly evaluation. Reporting agreement against a
+Z-score reference rather than accuracy against labelled faults means the
+detector's practical value---the 79 multivariate flags on UCI, the 81 on
+Tetouan---is argued from inspection rather than demonstrated. A better method
+was available in principle: injecting synthetic faults of known type and
+magnitude into the series would have created ground truth and permitted genuine
+precision and recall. This was not done because synthetic faults risk measuring
+the injector rather than the detector, but it remains the stronger design and
+is the first change this author would make.
+
+Third, the forecaster is univariate. The Tetouan analysis showed weather
+interacting strongly with demand, so a multivariate LSTM taking temperature and
+humidity as additional channels would very likely have outperformed the model
+reported here; the univariate choice was made for comparability across the two
+datasets, since the UCI record carries no weather data. Fourth, the reported
+metrics derive from a bounded 500-hour window rather than the full multi-year
+partition---a presentational constraint rather than a methodological one, and
+the least consequential of the four, since recomputation is straightforward and
+would not alter the ranking of the models.
+
+Two methodological alternatives deserve explicit mention. A GRU would have
+offered a lighter model at comparable accuracy \cite{mahjoub2022predicting} and
+would suit the edge-deployment goal better than the LSTM; it was not selected
+because the LSTM's record on load forecasting is more firmly established
+\cite{kong2017short}, but the trade-off is genuine rather than settled. For
+detection, an autoencoder-based method \cite{pereira2018unsupervised} would
+model normality more richly than random partitioning, at a computational cost
+this project's affordability constraint could not absorb---a constraint that
+would relax on any hardware above the \pounds30 target.
+
+Finally, the sensing layer, though designed, desk-test-specified, and approved,
+has not run on physical hardware, so the end-to-end claim rests on the pipeline
+rather than on the full system.
 
 \subsection{Lessons Learned}
 The sharpest lesson concerned source integrity: early drafts contained
