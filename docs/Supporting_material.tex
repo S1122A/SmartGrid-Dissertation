@@ -183,7 +183,7 @@ The feasibility of the sensing layer rests on this strand. TinyML
 hosted on low-power microcontrollers, and applied studies confirm it: Ken et
 al.\ \cite{ken2024advancing} perform real-time ozone prediction on
 cost-effective edge devices, and---most directly relevant---Baskar et al.\
-\cite{baskar2024edge} deploy the Arduino Nano BLE Sense, the same board adopted
+\cite{baskar2024edge} deploy the Arduino Nano 33 BLE Sense, the same board adopted
 here, for real-time industrial wastewater monitoring. The gap in this strand is
 integrative rather than technical: edge-ML studies typically address a single
 classification or regression task and rarely combine forecasting, anomaly
@@ -501,8 +501,8 @@ The four layers (Figure~\ref{fig:arch}) are separated for three reasons beyond t
 First, testability: each layer is exercised alone (the pipeline by its own
 notebook, the models by held-out metrics, the dashboard against saved files).
 Second, replaceability: the data source can change from benchmark CSV to live
-sensor log without touching the model layer---exactly the path the restaurant
-deployment will take. Third, failure containment: the serving layer reads files
+sensor log without touching the model layer---exactly the path a live
+deployment would take. Third, failure containment: the serving layer reads files
 only, so a modelling fault cannot take the interface down. The data these layers exchange is organised as shown in the schema of Figure~\ref{fig:schema} and the data-architecture diagram of Figure~\ref{fig:dataarch}, and the modules that implement them as the component diagram of Figure~\ref{fig:component}. The layering also
 mirrors the literature-derived parameters: affordability constrains the sensing
 layer, rigour constrains the pipeline, and the two-model pairing implements the
@@ -896,8 +896,8 @@ Table~\ref{tab:sprint} reconstructs the nine sprints from the supervision log. T
 The backlog, reconstructed from the supervision log, is tabulated in
 Table~\ref{tab:backlog} with priority and current status. Its shape shows the MVP-first
 ordering: pipeline and models before dashboard, dashboard before paper polish,
-and deployment (the only \emph{in-progress} item) explicitly decoupled so it
-cannot block submission.
+and deployment---descoped to future work under the project's secondary-data
+scope---explicitly decoupled so it cannot block submission.
 
 \begin{table}[htbp]
 \centering
@@ -975,7 +975,7 @@ Table~\ref{tab:risk} records the risks carried by the project with their likelih
 
 \subsection{Ethics and Safety Management}
 Ethics and safety were managed as process, not paperwork: the supervisor was
-informed ahead of the planned deployment; written site permission is held; the
+informed ahead of the deployment as designed; written site permission is held; the
 firmware computes a loudness number and discards audio by construction; and the
 physical rules are fixed in the deployment guide---no mains or wiring work of
 any kind, plug-through metering only with the appliance powered off, placement
