@@ -529,7 +529,9 @@ Figure~\ref{fig:dataarch} shows how these stores are organised into zones and ho
 \label{fig:component}
 \end{figure}
 
-Figure~\ref{fig:component} gives the structural counterpart: the repository's modules as software components with their dependencies. The experimentation notebooks produce the trained models and the results; the dashboard component reads the results; and the deployment component (firmware and loggers) will feed the data directory once hardware is in place, with the environment and governance files supporting all of them. A component view is used in preference to a class diagram because the codebase is organised as procedural notebooks and scripts rather than an object hierarchy.
+Figure~\ref{fig:component} gives the structural counterpart: the repository's modules as software components with their dependencies. The experimentation notebooks produce the trained models and the results; the dashboard component reads the results; and the deployment component (firmware and loggers) would feed the data
+directory in a live deployment, with the environment and governance files
+supporting all of them. A component view is used in preference to a class diagram because the codebase is organised as procedural notebooks and scripts rather than an object hierarchy.
 
 
 \subsection{Pipelining of the Algorithms}
@@ -1184,12 +1186,22 @@ def test_results_consistency():
     assert abs(mae - 0.3707) < 1e-3         # matches reported MAE
 \end{verbatim}
 
-\section{Multimedia Links}
+\section{Multimedia Links and Code}
+
 \begin{itemize}
-\item GitHub repository (code, data, models, results):
-      \url{https://github.com/S1122A/SmartGrid-Dissertation}
-\item Dashboard (local): \texttt{python -m streamlit run dashboard/app.py}
-      from the project root
+
+\item \textbf{Source Code (ZIP):}\\[4pt]
+\href{https://github.com/S1122A/SmartGrid-Dissertation/raw/refs/heads/main/20068400_Code.zip}
+{\large\textbf{Download Complete Source Code (ZIP)}}
+
+\item \textbf{Interactive Dashboard:}\\[4pt]
+\href{https://smartgrid-dissertation-esaunxm6rzlswabanum4yj.streamlit.app/}
+{\large\textbf{Open Interactive Dashboard}}
+
+\item \textbf{GitHub Repository:}\\[2pt]
+\href{https://github.com/S1122A/SmartGrid-Dissertation}
+{\large\textbf{View Project Repository}}
+
 \end{itemize}
 
 \clearpage
