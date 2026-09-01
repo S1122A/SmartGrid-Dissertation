@@ -57,7 +57,7 @@ Run the notebooks in order:
 | Notebook | Purpose | Produces |
 |---|---|---|
 | `01_data_exploration.ipynb` | Loads raw data, cleans, resamples to hourly, exploratory plots | `data/clean_hourly_power.csv`, EDA figures |
-| `02_lstm_forecasting.ipynb` | Trains the LSTM, evaluates against baselines | `results/predictions.csv`, `results/model_comparison.csv` |
+| `02_lstm_model.ipynb` | Trains the LSTM, evaluates against baselines | `results/predictions.csv`, `results/model_comparison.csv` |
 | `03_anomaly_detection.ipynb` | Isolation Forest, agreement study vs Z-score | `results/detected_anomalies.csv` |
 | `04_tetouan_validation.ipynb` | Re-applies the unchanged pipeline to Tetouan | `results/tetouan_*.csv` |
 
