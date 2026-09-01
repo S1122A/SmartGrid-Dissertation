@@ -467,7 +467,7 @@ The software is configured for reproducible local deployment: a pinned
 launch path. A site-specific configuration constraint---a Windows Device Guard
 policy blocking \texttt{streamlit.exe}---was resolved by launching through the
 interpreter (\texttt{python -m streamlit run dashboard/app.py}), a workaround
-now recorded in the run instructions. The physical deployment was fully designed — power strategy, placement rules, desk-test protocol, and written site permission — but was not executed, since the project's evaluation is based on secondary data. The design is retained as evidence of the sensing layer and as a specification for future work.
+now recorded in the run instructions. The physical deployment was fully designed --- power strategy, placement rules, desk-test protocol, and written site permission --- but was not executed, since the project's evaluation is based on secondary data. The design is retained as evidence of the sensing layer and as a specification for future work.
 
 \subsection{Prototype MVP and Design Principles}
 The Minimum Viable Product was defined as the dashboard serving requirements
@@ -1079,7 +1079,7 @@ supervision feedback: sections drafted immediately after each meeting required
 far less rework than material written speculatively in advance.
 
 \subsection{Future Work}
-The immediate step is executing the approved restaurant deployment---
+A natural extension is executing the designed deployment to collect primary data---
 environmental sensing plus single-appliance energy metering---as a live proof of
 concept of the sensing layer. Beyond it: SHAP-based explanation for both models
 \cite{lundberg2017unified}; extending the forecaster to multivariate input using
@@ -1116,7 +1116,7 @@ T5 & Reliability & Stop logger mid-run; restart & CSV appends; no loss, no overw
 \caption{Enumeration of tests run against the system and their outcomes.}
 \end{table}
 
-Table~A.1 enumerates the tests run against the system and their outcomes. T1 and T2 protect the integrity of the evaluation itself---no temporal leakage and reproducible metrics---while T3 and T4 exercise the dashboard's normal and failure paths, the latter confirming the guarded behaviour depicted in Figure~\ref{fig:sequence}. T5 verifies that the logger appends rather than overwrites, the property that makes an interrupted collection recoverable. T6 and T7 are marked \emph{planned} because they require the physical board, which is on order; listing them now fixes the acceptance criteria before the hardware arrives rather than after.
+Table~\ref{tab:test_cases} enumerates the tests run against the system and their outcomes. T1 and T2 protect the integrity of the evaluation itself---no temporal leakage and reproducible metrics---while T3 and T4 exercise the dashboard's normal and failure paths, the latter confirming the guarded behaviour depicted in Figure~\ref{fig:sequence}. T5 verifies that the logger appends rather than overwrites, the property that makes an interrupted collection recoverable. T6 and T7 are marked \emph{planned} because they require the physical board, which falls outside the project's secondary-data scope; listing them now fixes the acceptance criteria before the hardware arrives rather than after.
 
 \bigskip
 
