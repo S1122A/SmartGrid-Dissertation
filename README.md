@@ -96,6 +96,3 @@ IoT sensing layer (Arduino Nano 33 BLE Sense) was designed and specified, with
 site permission obtained, but was not deployed — collecting primary data is
 identified as future work.
 
-## Licence
-
-MIT.
