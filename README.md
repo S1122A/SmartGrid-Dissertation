@@ -7,6 +7,8 @@ A low-cost, end-to-end pipeline for industrial energy management: IoT sensing,
 LSTM demand forecasting, unsupervised anomaly detection, and a monitoring
 dashboard — built to be affordable enough for a small or medium enterprise.
 
+**[Open the live dashboard](https://smartgrid-dissertation-esaunxm6rzlswabanum4yj.streamlit.app/)**
+
 ## Results
 
 Evaluated on two public benchmark datasets.
@@ -15,6 +17,10 @@ Evaluated on two public benchmark datasets.
 |---|---|---|---|---|---|
 | UCI Household | LSTM | 0.3707 kW | 0.5421 kW | 8.6% | 35.7% |
 | Tetouan City | LSTM | 1,521.60 kW | 2,299.07 kW | 62.0% | 87.0% |
+
+The second row is the key result: the pipeline was re-applied to Tetouan
+**unchanged**, which establishes that it generalises across load scales rather
+than being tuned to one dataset.
 
 Anomaly detection (UCI): 346 of 34,589 hourly records flagged. Against a
 Z-score reference flagging 440, the methods agreed on 267; 79 were found only
@@ -29,10 +35,9 @@ minutes. No GPU was used at any stage.
 ```
 notebooks/     Jupyter notebooks, run in numerical order
 data/          Processed hourly datasets (raw data excluded — see Setup)
-models/        Trained model artefacts
 results/       Figures and CSV outputs consumed by the dashboard
 dashboard/     Streamlit monitoring interface
-docs/          Research paper and supporting material (LaTeX)
+docs/          Research paper, supporting material, and presentation
 ```
 
 ## Setup
@@ -89,10 +94,13 @@ time steps enters the model input.
   records for 2017 across three distribution zones, plus weather; resampled to
   8,736 hourly records.
 
+## Documentation
+
+The research paper, supporting material, and presentation are in `docs/`.
+
 ## Scope
 
 The evaluation uses secondary data from the two public benchmarks above. The
 IoT sensing layer (Arduino Nano 33 BLE Sense) was designed and specified, with
 site permission obtained, but was not deployed — collecting primary data is
 identified as future work.
-
