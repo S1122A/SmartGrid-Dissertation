@@ -1,7 +1,7 @@
 # Smart Grid Sensor Network for Industrial Energy Management
 
 MSc Computer Science research project (COM748), Ulster University.
-Saeed Sarwar Anas — Student Number 20068400 — Supervisor: Dr Anwar Haq
+Saeed Sarwar Anas — Supervisor: Dr Anwar Haq
 
 A low-cost, end-to-end pipeline for industrial energy management: IoT sensing,
 LSTM demand forecasting, unsupervised anomaly detection, and a monitoring
@@ -22,10 +22,14 @@ The second row is the key result: the pipeline was re-applied to Tetouan
 **unchanged**, which establishes that it generalises across load scales rather
 than being tuned to one dataset.
 
+![LSTM forecast against actual hourly demand (UCI Household)](results/04_actual_vs_predicted.png)
+
 Anomaly detection (UCI): 346 of 34,589 hourly records flagged. Against a
 Z-score reference flagging 440, the methods agreed on 267; 79 were found only
 by the multivariate detector. These are **agreement** figures, not accuracy —
 no ground-truth fault labels exist for either dataset.
+
+![Anomalies flagged by the Isolation Forest (UCI Household)](results/05_anomaly_detection.png)
 
 Training ran on a laptop CPU (AMD Ryzen 7 6800U, 16 GB RAM) in roughly eleven
 minutes. No GPU was used at any stage.
@@ -36,6 +40,7 @@ minutes. No GPU was used at any stage.
 notebooks/     Jupyter notebooks, run in numerical order
 data/          Processed hourly datasets (raw data excluded — see Setup)
 results/       Figures and CSV outputs consumed by the dashboard
+src/           Saved LSTM models (.keras)
 dashboard/     Streamlit monitoring interface
 docs/          Research paper, supporting material, and presentation
 ```
@@ -104,3 +109,9 @@ The evaluation uses secondary data from the two public benchmarks above. The
 IoT sensing layer (Arduino Nano 33 BLE Sense) was designed and specified, with
 site permission obtained, but was not deployed — collecting primary data is
 identified as future work.
+
+## Licence
+
+The code is released under the MIT licence (see `LICENSE`). The datasets come from the
+UCI Machine Learning Repository and keep their original licences. The paper and
+presentation in `docs/` are © Saeed Sarwar Anas.
